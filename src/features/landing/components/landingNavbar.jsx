@@ -1,27 +1,26 @@
 import React from "react";
 
-
 function LandingNavbar() {
   return (
-    <nav className="w-full h-16 bg-black flex items-center justify-around fixed">
-      <img src="/public/images/NBlogo.png" alt="" className="h-16 w-auto" />
+    <nav className="sticky top-0 z-50 w-full h-16 border-b bg-black backdrop-blur supports-[backdrop-filter]:bg-black/90 border-gray-800 flex items-center justify-around">
+      <img src="/public/images/NBlogo.png" alt="" className="h-12 w-auto" />
       <ul className="flex space-x-6 text-white font-semibold">
-        <li><a href="#" className="hover:text-gray-300">Inicio</a></li>
-        <li><a href="#" className="hover:text-gray-300">Productos</a></li>
-        <li><a href="#" className="hover:text-gray-300">Categorías</a></li>
+        <li><a href="#inicio" className="hover:text-gray-300">Inicio</a></li>
+        <li><a href="#productos" className="hover:text-gray-300">Productos</a></li>
+        <li><a href="#categorias" className="hover:text-gray-300">Categorías</a></li>
         <li><a href="#" className="hover:text-gray-300">Sobre Nosotros</a></li>
         <li><a href="#" className="hover:text-gray-300">Contacto</a></li>
       </ul>
-      <div class="flex items-center bg-[#1a1a1a] rounded-md ml-5 px-3 py-2 w-72">
+      <div className="flex items-center bg-[#1a1a1a] rounded-md ml-5 px-3 py-2 w-72">
         <input
           type="text"
           placeholder="Buscar productos..."
           class="flex-1 bg-transparent outline-none text-gray-300 placeholder-gray-500"
         />
         <svg xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5 text-gray-500"
+          className="h-5 w-5 text-gray-500"
           fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
             d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1110.65 5.65a7.5 7.5 0 016.36 10.36z" />
         </svg>
       </div>
@@ -35,8 +34,6 @@ function LandingNavbar() {
         </svg>
         Carrito (0)
       </button>
-
-
     </nav>
   );
 }
