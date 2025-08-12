@@ -8,7 +8,7 @@ import {
 function SectionOne() {
     return (
         <div id="inicio" className="w-full h-auto bg-[#0a0a0a] flex p-12">
-            <div>
+            <div className="p-12">
                 <h1 className="text-[#6b5b47] text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none pt-32">Descubre tu estilo unico</h1>
                 <p className="text-xl font-bold text-[#e5e5e5] pt-6">La mejor colección de zapatos, ropa y accesorios de moda. Calidad premium, precios increíbles y envío gratis en compras superiores a €50.</p>
                 <div className="pt-6">
