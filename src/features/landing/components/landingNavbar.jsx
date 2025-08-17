@@ -38,17 +38,7 @@ function LandingNavbar() {
         </svg>
         Carrito (0)
       </button>
-      <button className="flex items-center gap-2 bg-[#7A6240] text-white font-bold px-4 py-2 rounded-md" 
-        onClick={() => navigate("/login")}>
-        {/* Ícono de usuario */}
-        <svg xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5"
-          fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-            d="M16 11a4 4 0 11-8 0 4 4 0 018 0zm-1.5 6.5a6.5 6.5 0 00-13 0v1.5a1.5 1.5 0 001.5 1.5h10a1.5 1.5 0 001.5-1.5V17z" />
-        </svg>
-        Login Admin
-      </button>
+      
     </nav>
   );
 }

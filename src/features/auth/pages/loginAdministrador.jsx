@@ -17,6 +17,7 @@ function LoginAdministrador() {
     } else {
       setError("");
       alert("Inicio de sesión correcto!");
+      navigate("/admin/dashboard");
     }
   };
 
