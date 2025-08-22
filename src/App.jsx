@@ -2,13 +2,16 @@ import './App.css';
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import AppRoutes from './routes/routes';
+import { AuthClientProvider } from './features/auth/hooks/useAuthClient';
 
 
 const App = () => {
   return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    <AuthClientProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </AuthClientProvider>
   );
 };
 

@@ -12,7 +12,7 @@ function LoginAdministrador() {
     e.preventDefault();
 
     // Ejemplo simple de validación
-    if (email !== "admin@modastyle.com" || password !== "admin123") {
+    if (email !== "admin@nublack.com" || password !== "admin123") {
       setError("Credenciales incorrectas, Intenta de nuevo.");
     } else {
       setError("");
@@ -52,7 +52,7 @@ function LoginAdministrador() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full px-4 py-2 rounded-lg bg-zinc-800 text-white focus:outline-none mb-4"
-            placeholder="admin@modastyle.com"
+            placeholder="admin@nublack.com"
           />
 
           <label className="block mb-2 text-sm">Contraseña</label>

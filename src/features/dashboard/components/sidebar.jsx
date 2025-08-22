@@ -1,24 +1,19 @@
 import React from 'react';
-import {
-    BsHouseDoor,
-    BsPeople,
-    BsFolder,
-    BsBasket3,
-    BsClipboard,
-    BsSearch
-} from 'react-icons/bs';
-import { PersonCircle, GearFill, BoxArrowRight } from "react-bootstrap-icons";
+import { Link, useLocation } from 'react-router-dom';
+import { PersonCircle, GearFill, BoxArrowRight, HouseDoor, People, Folder, Basket3, Clipboard, Search } from "react-bootstrap-icons";
 
 const selections = [
-    { name: 'Dashboard', href: '/admin/dashboard', icon: BsHouseDoor },
-    { name: 'Usuarios', href: '#', icon: BsPeople },
-    { name: 'Categorías', href: '/admin/categorias', icon: BsFolder },
-    { name: 'Productos', href: '#', icon: BsBasket3 },
-    { name: 'Solicitudes', href: '#', icon: BsClipboard },
-    { name: 'Detalles de solicitud', href: '#', icon: BsSearch }
+    { name: 'Dashboard', href: '/admin/dashboard', icon: HouseDoor },
+    { name: 'Usuarios', href: '/admin/usuarios', icon: People },
+    { name: 'Categorías', href: '/admin/categorias', icon: Folder },
+    { name: 'Productos', href: '/admin/productos', icon: Basket3 },
+    { name: 'Solicitudes', href: '#', icon: Clipboard },
+    { name: 'Detalles de solicitud', href: '#', icon: Search }
 ];
 
 function Sidebar() {
+    const location = useLocation();
+    
     return (
         <div className='flex h-full w-64 flex-col bg-[#0a0a0a] border-r border-gray-800'>
             {/* Encabezado */}
@@ -30,17 +25,21 @@ function Sidebar() {
             <nav className="flex-1 space-y-1 p-4">
                 {selections.map((item) => {
                     const Icon = item.icon;
+                    const isActive = location.pathname === item.href;
                     return (
-                        <a
+                        <Link
                             key={item.name}
-                            href={item.href}
-                            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium
-                                text-[#cfcfcf] hover:bg-[#1a1a1a] hover:text-white 
-                                transition-colors duration-200 ease-in-out"
+                            to={item.href}
+                            className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium
+                                transition-colors duration-200 ease-in-out ${
+                                isActive 
+                                    ? 'bg-[#1a1a1a] text-white' 
+                                    : 'text-[#cfcfcf] hover:bg-[#1a1a1a] hover:text-white'
+                            }`}
                         >
                             <Icon className="h-5 w-5" />
                             {item.name}
-                        </a>
+                        </Link>
                     );
                 })}
             </nav>

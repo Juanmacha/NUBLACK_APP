@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Sidebar from "../../components/sidebar";
 import CategoryTable from "./components/categoryTable";
-import { Search, Plus } from "lucide-react";
+import { useCategories } from "./hooks/useCategories";
 
 // Modales
 import VerCategoriaModal from "./components/seeCategory";
@@ -13,11 +13,7 @@ function Category() {
   const [busqueda, setBusqueda] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todas");
 
-  const [categorias, setCategorias] = useState([
-    { id: 1, nombre: "Tecnología", descripcion: "Productos electrónicos y gadgets", estado: "Activo" },
-    { id: 2, nombre: "Ropa", descripcion: "Moda y accesorios", estado: "Inactivo" },
-    { id: 3, nombre: "Muebles", descripcion: "Artículos para el hogar", estado: "Activo" },
-  ]);
+  const { categories, createCategory, updateCategory, deleteCategory } = useCategories();
 
   const [modalVer, setModalVer] = useState(null);
   const [modalEditar, setModalEditar] = useState(null);
@@ -25,7 +21,7 @@ function Category() {
   const [modalCrear, setModalCrear] = useState(false);
 
   // Filtro de categorías
-  const categoriasFiltradas = categorias.filter((cat) => {
+  const categoriasFiltradas = categories.filter((cat) => {
     const matchBusqueda =
       cat.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
       cat.descripcion.toLowerCase().includes(busqueda.toLowerCase());
@@ -41,11 +37,7 @@ function Category() {
   });
 
   const handleCrearCategoria = (nuevaCategoria) => {
-    const nueva = {
-      id: categorias.length ? Math.max(...categorias.map((c) => c.id)) + 1 : 1,
-      ...nuevaCategoria,
-    };
-    setCategorias((prev) => [...prev, nueva]);
+    createCategory(nuevaCategoria);
   };
 
   return (
@@ -61,7 +53,7 @@ function Category() {
             onClick={() => setModalCrear(true)}
             className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
-            <Plus size={18} />
+            <span className="text-lg">+</span>
             Nueva Categoría
           </button>
         </div>
@@ -72,7 +64,9 @@ function Category() {
           <p className="text-sm text-gray-500 mb-4">Busca y filtra las categorías registradas</p>
           <div className="flex flex-wrap gap-4">
             <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+              <svg className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
               <input
                 type="text"
                 placeholder="Buscar categoría..."
@@ -98,7 +92,7 @@ function Category() {
           categorias={categoriasFiltradas}
           onVer={(cat) => setModalVer(cat)}
           onEditar={(cat) => setModalEditar(cat)}
-          onEliminar={(id) => setCategorias((prev) => prev.filter((c) => c.id !== id))}
+          onEliminar={(id) => deleteCategory(id)}
         />
 
         {/* Modales */}
@@ -107,18 +101,14 @@ function Category() {
           <EditarCategoriaModal
             categoria={modalEditar}
             onClose={() => setModalEditar(null)}
-            onGuardar={(data) =>
-              setCategorias((prev) => prev.map((c) => (c.id === data.id ? data : c)))
-            }
+            onGuardar={(data) => updateCategory(data.id, data)}
           />
         )}
         {modalEliminar && (
           <EliminarCategoriaModal
             categoria={modalEliminar}
             onClose={() => setModalEliminar(null)}
-            onEliminar={(id) =>
-              setCategorias((prev) => prev.filter((c) => c.id !== id))
-            }
+            onEliminar={(id) => deleteCategory(id)}
           />
         )}
         {modalCrear && <CrearCategoriaModal onClose={() => setModalCrear(false)} onCrear={handleCrearCategoria} />}
