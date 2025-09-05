@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaEye, FaPencilAlt, FaTrash } from 'react-icons/fa';
 
 const UserTable = ({ users, onView, onEdit, onDelete }) => {
   return (
@@ -53,21 +54,21 @@ const UserTable = ({ users, onView, onEdit, onDelete }) => {
                     onClick={() => onView(user)}
                     className="text-blue-600 hover:text-blue-900"
                   >
-                    <span>👁️</span>
+                    <FaEye />
                   </button>
                   <button
                     onClick={() => onEdit(user)}
                     className="text-green-600 hover:text-green-900"
                     disabled={user.id === 'admin-demo'}
                   >
-                    <span>✏️</span>
+                    <FaPencilAlt />
                   </button>
                   {user.id !== 'admin-demo' && (
                     <button
                       onClick={() => onDelete(user)}
                       className="text-red-600 hover:text-red-900"
                     >
-                      <span>🗑️</span>
+                      <FaTrash />
                     </button>
                   )}
                 </div>

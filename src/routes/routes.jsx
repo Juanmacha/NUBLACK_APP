@@ -10,9 +10,11 @@ import RecuperarContrasena from "../features/auth/pages/recuperarcontrasena";
 import VerificarCodigo from "../features/auth/pages/VerificarCodigo";
 import RestablecerContrasena from "../features/auth/pages/RestablecerContrasena";
 import Dashboard from "../features/dashboard/dashboard";
+import DashboardHome from "../features/dashboard/pages/DashboardHome";
 import Category from "../features/dashboard/pages/categoryManagement/category";
 import Product from "../features/dashboard/pages/productManagement/product";
 import User from "../features/dashboard/pages/userManagement/user";
+import Solicitudes from "../features/dashboard/pages/solicitudes";
 
 const AppRoutes = () => {
     return (
@@ -26,10 +28,16 @@ const AppRoutes = () => {
             <Route path="/recuperar-contrasena" element={<RecuperarContrasena />} />
             <Route path="/verificar-codigo" element={<VerificarCodigo />} />
             <Route path="/restablecer-contrasena" element={<RestablecerContrasena />} />
-            <Route path="/admin/dashboard" element={<Dashboard />} />
-            <Route path="/admin/categorias" element={<Category />} />
-            <Route path="/admin/productos" element={<Product />} />
-            <Route path="/admin/usuarios" element={<User />} />
+            
+            {/* Rutas del Admin con Sidebar */}
+            <Route path="/admin/dashboard" element={<Dashboard />}>
+                <Route index element={<DashboardHome />} />
+                <Route path="categorias" element={<Category />} />
+                <Route path="productos" element={<Product />} />
+                <Route path="usuarios" element={<User />} />
+                <Route path="solicitudes" element={<Solicitudes />} />
+            </Route>
+            
             <Route path="*" element={<Navigate to="/" />} />
         </Routes>
     );

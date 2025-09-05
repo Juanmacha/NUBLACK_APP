@@ -2,46 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 
 const PRODUCTS_STORAGE_KEY = 'nublack_products';
 
-export const loadProducts = () => {
+const loadProducts = () => {
   try {
     const stored = localStorage.getItem(PRODUCTS_STORAGE_KEY);
-    const products = stored ? JSON.parse(stored) : [];
-    
-    // Si no hay productos, crear algunos de prueba
-    if (products.length === 0) {
-      const sampleProducts = [
-        {
-          id: 1,
-          nombre: 'Jordan',
-          descripcion: 'Zapatillas deportivas de alta calidad',
-          precio: 10000,
-          stock: 10,
-          categoria: 'Zapatos',
-          imagen: '/images/placeholder.png',
-          estado: 'activo',
-          rating: 4.5,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: 2,
-          nombre: 'Nike Air Max',
-          descripcion: 'Zapatillas cómodas para running',
-          precio: 8500,
-          stock: 15,
-          categoria: 'Zapatos',
-          imagen: '/images/placeholder.png',
-          estado: 'activo',
-          rating: 4.8,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-      ];
-      localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(sampleProducts));
-      return sampleProducts;
-    }
-    
-    return products;
+    return stored ? JSON.parse(stored) : [];
   } catch (error) {
     console.error('Error loading products:', error);
     return [];
@@ -57,7 +21,7 @@ const saveProducts = (products) => {
 };
 
 const generateId = () => {
-  return Date.now();
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
 
 export const useProducts = () => {
@@ -114,9 +78,8 @@ export const useProducts = () => {
     }
   }, [products]);
 
-  const deleteProduct = useCallback(async (id, reason) => {
+  const deleteProduct = useCallback(async (id) => {
     try {
-      console.log(`Deleting product ${id} with reason: ${reason}`);
       const updatedProducts = products.filter(product => product.id !== id);
       setProducts(updatedProducts);
       saveProducts(updatedProducts);

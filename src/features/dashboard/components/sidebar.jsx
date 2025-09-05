@@ -4,11 +4,10 @@ import { PersonCircle, GearFill, BoxArrowRight, HouseDoor, People, Folder, Baske
 
 const selections = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: HouseDoor },
-    { name: 'Usuarios', href: '/admin/usuarios', icon: People },
-    { name: 'Categorías', href: '/admin/categorias', icon: Folder },
-    { name: 'Productos', href: '/admin/productos', icon: Basket3 },
-    { name: 'Solicitudes', href: '#', icon: Clipboard },
-    { name: 'Detalles de solicitud', href: '#', icon: Search }
+    { name: 'Usuarios', href: '/admin/dashboard/usuarios', icon: People },
+    { name: 'Categorías', href: '/admin/dashboard/categorias', icon: Folder },
+    { name: 'Productos', href: '/admin/dashboard/productos', icon: Basket3 },
+    { name: 'Solicitudes', href: '/admin/dashboard/solicitudes', icon: Clipboard }
 ];
 
 function Sidebar() {

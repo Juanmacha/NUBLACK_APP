@@ -67,55 +67,70 @@ const User = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Gestión de Usuarios</h1>
+    <div className="p-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
+          <p className="text-gray-500 mb-6">Administra los usuarios de tu empresa</p>
+        </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
         >
-          <span className="mr-2">+</span>
+          <span className="text-lg">+</span>
           Nuevo Usuario
         </button>
       </div>
 
-      <div className="mb-4 flex gap-4">
-        <input
-          type="text"
-          placeholder="Buscar usuarios..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">Todos los roles</option>
-          <option value="Cliente">Cliente</option>
-          <option value="Administrador">Administrador</option>
-        </select>
+      {/* Filtros */}
+      <div className="bg-white shadow rounded-lg p-6 mb-6">
+        <h2 className="text-lg font-semibold mb-1">Filtros de Usuarios</h2>
+        <p className="text-sm text-gray-500 mb-4">Busca y filtra los usuarios registrados</p>
+        <div className="flex flex-wrap gap-4">
+          <div className="relative flex-1 min-w-[200px]">
+            <svg className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Buscar por nombre, email, documento..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8 pr-3 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-md w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Todos los roles</option>
+            <option value="Cliente">Cliente</option>
+            <option value="Administrador">Administrador</option>
+          </select>
+        </div>
       </div>
 
-      {loading && <p className="text-gray-600">Cargando usuarios...</p>}
-      {error && <p className="text-red-600">Error: {error}</p>}
+      {loading && <p className="text-center py-4 text-gray-600">Cargando usuarios...</p>}
+      {error && <p className="text-center py-4 text-red-600">Error: {error}</p>}
 
-      <UserTable
-        users={filteredUsers}
-        onView={(user) => {
-          setSelectedUser(user);
-          setShowViewModal(true);
-        }}
-        onEdit={(user) => {
-          setSelectedUser(user);
-          setShowEditModal(true);
-        }}
-        onDelete={(user) => {
-          setSelectedUser(user);
-          setShowDeleteModal(true);
-        }}
-      />
+      {!loading && !error && (
+        <UserTable
+          users={filteredUsers}
+          onView={(user) => {
+            setSelectedUser(user);
+            setShowViewModal(true);
+          }}
+          onEdit={(user) => {
+            setSelectedUser(user);
+            setShowEditModal(true);
+          }}
+          onDelete={(user) => {
+            setSelectedUser(user);
+            setShowDeleteModal(true);
+          }}
+        />
+      )}
 
       {showCreateModal && (
         <UserCreate

@@ -1,38 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { loadProducts } from '../../productManagement/hooks/useProducts';
 
 const CATEGORIES_STORAGE_KEY = 'nublack_categories';
 
 const loadCategories = () => {
   try {
     const stored = localStorage.getItem(CATEGORIES_STORAGE_KEY);
-    const categories = stored ? JSON.parse(stored) : [];
-    
-    // Si no hay categorías, crear algunas de prueba
-    if (categories.length === 0) {
-      const sampleCategories = [
-        {
-          id: 1,
-          nombre: 'Zapatos',
-          descripcion: 'Calzado deportivo y casual',
-          estado: 'Activo',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: 2,
-          nombre: 'Ropa',
-          descripcion: 'Vestimenta deportiva y casual',
-          estado: 'Activo',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-      ];
-      localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(sampleCategories));
-      return sampleCategories;
-    }
-    
-    return categories;
+    return stored ? JSON.parse(stored) : [];
   } catch (error) {
     console.error('Error loading categories:', error);
     return [];
@@ -47,12 +20,8 @@ const saveCategories = (categories) => {
   }
 };
 
-const generateId = (currentCategories) => {
-  if (currentCategories.length === 0) {
-    return 1;
-  }
-  const maxId = Math.max(...currentCategories.map(cat => cat.id));
-  return maxId + 1;
+const generateId = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
 
 export const useCategories = () => {
@@ -79,7 +48,7 @@ export const useCategories = () => {
   const createCategory = useCallback(async (categoryData) => {
     try {
       const newCategory = {
-        id: generateId(categories),
+        id: generateId(),
         ...categoryData,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -109,27 +78,13 @@ export const useCategories = () => {
     }
   }, [categories]);
 
-  const deleteCategory = useCallback(async (id, reason) => {
+  const deleteCategory = useCallback(async (id) => {
     try {
-      const products = loadProducts(); // Load products to check for associations
-      const categoryToDelete = categories.find(cat => cat.id === id);
-
-      if (!categoryToDelete) {
-        throw new Error('Categoría no encontrada.');
-      }
-
-      const associatedProducts = products.filter(product => product.categoria === categoryToDelete.nombre);
-
-      if (associatedProducts.length > 0) {
-        throw new Error('No se puede eliminar la categoría porque tiene productos asociados.');
-      }
-
       const updatedCategories = categories.filter(category => category.id !== id);
       setCategories(updatedCategories);
       saveCategories(updatedCategories);
-      console.log(`Categoría ${categoryToDelete.nombre} eliminada. Motivo: ${reason}`);
     } catch (err) {
-      throw new Error(err.message || 'Error al eliminar categoría');
+      throw new Error('Error al eliminar categoría');
     }
   }, [categories]);
 
