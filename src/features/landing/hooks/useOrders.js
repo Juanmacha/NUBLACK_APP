@@ -1,126 +1,356 @@
 import { useCallback, useMemo } from 'react';
 import { useAuthClient } from '../../auth/hooks/useAuthClient.jsx';
 
-const ORDERS_STORAGE_KEY = 'nb_orders';
+// Claves del localStorage para la nueva estructura
+const SOLICITUDES_STORAGE_KEY = 'nublack_solicitudes';
+const DETALLES_STORAGE_KEY = 'nublack_detalles_solicitudes';
 
-const loadOrdersMap = () => {
+// Funciones para cargar datos
+const loadSolicitudes = () => {
   try {
-    const stored = localStorage.getItem(ORDERS_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : {};
+    const stored = localStorage.getItem(SOLICITUDES_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
   } catch (error) {
-    console.error('Error loading orders:', error);
-    return {};
+    console.error('Error loading solicitudes:', error);
+    return [];
   }
 };
 
-const saveOrdersMap = (ordersMap) => {
+const loadDetalles = () => {
   try {
-    localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(ordersMap));
+    const stored = localStorage.getItem(DETALLES_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
   } catch (error) {
-    console.error('Error saving orders:', error);
+    console.error('Error loading detalles:', error);
+    return [];
   }
 };
 
-const generateOrderId = () => {
+// Funciones para guardar datos
+const saveSolicitudes = (solicitudes) => {
+  try {
+    localStorage.setItem(SOLICITUDES_STORAGE_KEY, JSON.stringify(solicitudes));
+  } catch (error) {
+    console.error('Error saving solicitudes:', error);
+  }
+};
+
+const saveDetalles = (detalles) => {
+  try {
+    localStorage.setItem(DETALLES_STORAGE_KEY, JSON.stringify(detalles));
+  } catch (error) {
+    console.error('Error saving detalles:', error);
+  }
+};
+
+// Generar IDs únicos
+const generateId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
 
 export function useOrders() {
   const { user } = useAuthClient();
 
-  const getAllForUser = useCallback(() => {
+  // Obtener todas las solicitudes del usuario
+  const getAllSolicitudes = useCallback(() => {
     if (!user?.email) return [];
     
-    const ordersMap = loadOrdersMap();
-    return ordersMap[user.email] || [];
+    const solicitudes = loadSolicitudes();
+    return solicitudes.filter(solicitud => solicitud.userEmail === user.email);
   }, [user?.email]);
 
+  // Obtener solicitudes con sus detalles
+  const getSolicitudesCompletas = useCallback(() => {
+    if (!user?.email) return [];
+    
+    const solicitudes = loadSolicitudes();
+    const detalles = loadDetalles();
+    
+    return solicitudes
+      .filter(solicitud => solicitud.userEmail === user.email)
+      .map(solicitud => {
+        const detallesSolicitud = detalles.filter(detalle => 
+          detalle.solicitudId === solicitud.id
+        );
+        return {
+          ...solicitud,
+          detalles: detallesSolicitud
+        };
+      });
+  }, [user?.email]);
+
+  // Obtener solo solicitudes (sin detalles)
   const getSolicitudes = useCallback(() => {
-    return getAllForUser().filter(order => order.type === 'solicitud');
-  }, [getAllForUser]);
+    return getAllSolicitudes();
+  }, [getAllSolicitudes]);
 
-  const getCompras = useCallback(() => {
-    return getAllForUser().filter(order => order.type === 'compra');
-  }, [getAllForUser]);
+  // Obtener detalles de una solicitud específica
+  const getDetallesSolicitud = useCallback((solicitudId) => {
+    const detalles = loadDetalles();
+    return detalles.filter(detalle => detalle.solicitudId === solicitudId);
+  }, []);
 
-  const createSolicitud = useCallback((items, subtotal) => {
+  // Crear nueva solicitud con detalles
+  const createSolicitud = useCallback((solicitudData) => {
     if (!user?.email) throw new Error('Usuario no autenticado');
     
-    const ordersMap = loadOrdersMap();
-    const userOrders = ordersMap[user.email] || [];
-    
-    const newOrder = {
-      id: generateOrderId(),
-      type: 'solicitud',
-      items: items.map(item => ({
-        ...item,
-        id: item.id || generateOrderId()
-      })),
-      subtotal,
-      status: 'pendiente',
+    // 1. Crear la solicitud principal
+    const nuevaSolicitud = {
+      id: generateId(),
+      numeroPedido: solicitudData.numeroPedido,
+      fechaSolicitud: solicitudData.fechaSolicitud,
+      estado: 'pendiente',
+      total: solicitudData.subtotal,
+      tiempoEstimadoEntrega: solicitudData.tiempoEstimadoEntrega,
+      prioridad: solicitudData.prioridad || 'normal',
+      notasInternas: solicitudData.notasInternas,
+      
+      // Información del cliente
+      nombreCompleto: solicitudData.nombreCompleto,
+      documentoIdentificacion: solicitudData.documentoIdentificacion,
+      telefonoContacto: solicitudData.telefonoContacto,
+      correoElectronico: solicitudData.correoElectronico,
+      direccionEntrega: solicitudData.direccionEntrega,
+      indicacionesAdicionales: solicitudData.indicacionesAdicionales,
+      referenciaDireccion: solicitudData.referenciaDireccion,
+      instruccionesEspeciales: solicitudData.instruccionesEspeciales,
+      horarioPreferido: solicitudData.horarioPreferido,
+      
+      // Información de pago
+      metodoPago: solicitudData.metodoPago,
+      
+      // Información del sistema
       createdAt: new Date().toISOString(),
       userEmail: user.email,
       userName: user.name
     };
+
+    // 2. Crear los detalles de productos
+    const nuevosDetalles = solicitudData.productos.map(producto => ({
+      id: generateId(),
+      solicitudId: nuevaSolicitud.id,
+      productoId: producto.id,
+      nombreProducto: producto.nombre,
+      descripcionProducto: producto.descripcion || '',
+      imagenProducto: producto.imagen || '',
+      cantidad: producto.quantity,
+      precioUnitario: producto.precio,
+      subtotal: producto.precio * producto.quantity
+    }));
+
+    // 3. Guardar en localStorage
+    const solicitudes = loadSolicitudes();
+    const detalles = loadDetalles();
     
-    const updatedUserOrders = [...userOrders, newOrder];
-    ordersMap[user.email] = updatedUserOrders;
-    saveOrdersMap(ordersMap);
+    solicitudes.push(nuevaSolicitud);
+    detalles.push(...nuevosDetalles);
     
-    return newOrder;
+    saveSolicitudes(solicitudes);
+    saveDetalles(detalles);
+
+    // Debug logs
+    console.log('Nueva solicitud creada:', nuevaSolicitud);
+    console.log('Detalles creados:', nuevosDetalles);
+    console.log('Total solicitudes:', solicitudes.length);
+    console.log('Total detalles:', detalles.length);
+
+    return {
+      solicitud: nuevaSolicitud,
+      detalles: nuevosDetalles
+    };
   }, [user?.email, user?.name]);
 
-  const createCompra = useCallback((items, subtotal) => {
-    if (!user?.email) throw new Error('Usuario no autenticado');
+  // Actualizar estado de solicitud
+  const updateSolicitudEstado = useCallback((solicitudId, nuevoEstado) => {
+    const solicitudes = loadSolicitudes();
+    const solicitudIndex = solicitudes.findIndex(s => s.id === solicitudId);
     
-    const ordersMap = loadOrdersMap();
-    const userOrders = ordersMap[user.email] || [];
+    if (solicitudIndex !== -1) {
+      solicitudes[solicitudIndex].estado = nuevoEstado;
+      solicitudes[solicitudIndex].updatedAt = new Date().toISOString();
+      
+      // Si se aprueba, agregar información del domiciliario
+      if (nuevoEstado === 'aprobada') {
+        solicitudes[solicitudIndex].domiciliario = {
+          nombre: 'Domiciliario Asignado',
+          telefono: '+34 XXX XXX XXX',
+          fechaAsignacion: new Date().toISOString()
+        };
+      }
+      
+      saveSolicitudes(solicitudes);
+      return true;
+    }
+    return false;
+  }, []);
+
+  // Agregar producto a solicitud existente
+  const addProductoToSolicitud = useCallback((solicitudId, producto) => {
+    const detalles = loadDetalles();
+    const solicitudes = loadSolicitudes();
     
-    const newOrder = {
-      id: generateOrderId(),
-      type: 'compra',
-      items: items.map(item => ({
-        ...item,
-        id: item.id || generateOrderId()
-      })),
-      subtotal,
-      status: 'completada',
-      createdAt: new Date().toISOString(),
-      userEmail: user.email,
-      userName: user.name
+    // Verificar que la solicitud existe
+    const solicitud = solicitudes.find(s => s.id === solicitudId);
+    if (!solicitud) throw new Error('Solicitud no encontrada');
+    
+    // Crear nuevo detalle
+    const nuevoDetalle = {
+      id: generateId(),
+      solicitudId: solicitudId,
+      productoId: producto.id,
+      nombreProducto: producto.nombre,
+      descripcionProducto: producto.descripcion || '',
+      imagenProducto: producto.imagen || '',
+      cantidad: producto.quantity,
+      precioUnitario: producto.precio,
+      subtotal: producto.precio * producto.quantity
     };
     
-    const updatedUserOrders = [...userOrders, newOrder];
-    ordersMap[user.email] = updatedUserOrders;
-    saveOrdersMap(ordersMap);
+    // Agregar detalle
+    detalles.push(nuevoDetalle);
+    saveDetalles(detalles);
     
-    return newOrder;
-  }, [user?.email, user?.name]);
+    // Actualizar total de la solicitud
+    const detallesSolicitud = detalles.filter(d => d.solicitudId === solicitudId);
+    const nuevoTotal = detallesSolicitud.reduce((sum, d) => sum + d.subtotal, 0);
+    
+    solicitud.total = nuevoTotal;
+    solicitud.updatedAt = new Date().toISOString();
+    saveSolicitudes(solicitudes);
+    
+    return nuevoDetalle;
+  }, []);
 
-  const updateOrderStatus = useCallback((orderId, newStatus) => {
-    if (!user?.email) throw new Error('Usuario no autenticado');
+  // Remover producto de solicitud
+  const removeProductoFromSolicitud = useCallback((solicitudId, detalleId) => {
+    const detalles = loadDetalles();
+    const solicitudes = loadSolicitudes();
     
-    const ordersMap = loadOrdersMap();
-    const userOrders = ordersMap[user.email] || [];
+    // Remover detalle
+    const detallesFiltrados = detalles.filter(d => d.id !== detalleId);
+    saveDetalles(detallesFiltrados);
     
-    const updatedUserOrders = userOrders.map(order => 
-      order.id === orderId 
-        ? { ...order, status: newStatus, updatedAt: new Date().toISOString() }
-        : order
-    );
+    // Actualizar total de la solicitud
+    const detallesSolicitud = detallesFiltrados.filter(d => d.solicitudId === solicitudId);
+    const nuevoTotal = detallesSolicitud.reduce((sum, d) => sum + d.subtotal, 0);
     
-    ordersMap[user.email] = updatedUserOrders;
-    saveOrdersMap(ordersMap);
-  }, [user?.email]);
+    const solicitudIndex = solicitudes.findIndex(s => s.id === solicitudId);
+    if (solicitudIndex !== -1) {
+      solicitudes[solicitudIndex].total = nuevoTotal;
+      solicitudes[solicitudIndex].updatedAt = new Date().toISOString();
+      saveSolicitudes(solicitudes);
+    }
+    
+    return true;
+  }, []);
 
-  const value = useMemo(() => ({
-    getAllForUser,
+  // Obtener estadísticas
+  const getEstadisticas = useCallback(() => {
+    const solicitudes = loadSolicitudes();
+    const detalles = loadDetalles();
+    
+    return {
+      totalSolicitudes: solicitudes.length,
+      solicitudesPendientes: solicitudes.filter(s => s.estado === 'pendiente').length,
+      solicitudesAprobadas: solicitudes.filter(s => s.estado === 'aprobada').length,
+      solicitudesEnCamino: solicitudes.filter(s => s.estado === 'en_camino').length,
+      solicitudesEntregadas: solicitudes.filter(s => s.estado === 'entregada').length,
+      solicitudesCanceladas: solicitudes.filter(s => s.estado === 'cancelada').length,
+      totalProductos: detalles.length,
+      valorTotal: solicitudes.reduce((sum, s) => sum + s.total, 0)
+    };
+  }, []);
+
+  // Migrar datos del sistema anterior (si existe)
+  const migrarDatosAnteriores = useCallback(() => {
+    try {
+      const oldOrders = localStorage.getItem('nublack_orders');
+      if (!oldOrders) return;
+      
+      const oldOrdersMap = JSON.parse(oldOrders);
+      const solicitudes = [];
+      const detalles = [];
+      
+      Object.values(oldOrdersMap).flat().forEach(order => {
+        if (order.type === 'solicitud') {
+          // Crear solicitud
+          const solicitud = {
+            id: order.id,
+            numeroPedido: order.numeroPedido,
+            fechaSolicitud: order.fechaSolicitud,
+            estado: order.estado,
+            total: order.subtotal,
+            tiempoEstimadoEntrega: order.tiempoEstimadoEntrega,
+            prioridad: order.prioridad || 'normal',
+            notasInternas: order.notasInternas,
+            nombreCompleto: order.nombreCompleto,
+            documentoIdentificacion: order.documentoIdentificacion,
+            telefonoContacto: order.telefonoContacto,
+            correoElectronico: order.correoElectronico,
+            direccionEntrega: order.direccionEntrega,
+            indicacionesAdicionales: order.indicacionesAdicionales,
+            referenciaDireccion: order.referenciaDireccion,
+            instruccionesEspeciales: order.instruccionesEspeciales,
+            horarioPreferido: order.horarioPreferido,
+            metodoPago: order.metodoPago,
+            createdAt: order.createdAt,
+            userEmail: order.userEmail,
+            userName: order.userName
+          };
+          
+          solicitudes.push(solicitud);
+          
+          // Crear detalles
+          if (order.productos) {
+            order.productos.forEach(producto => {
+              const detalle = {
+                id: generateId(),
+                solicitudId: order.id,
+                productoId: producto.id,
+                nombreProducto: producto.nombre,
+                descripcionProducto: producto.descripcion || '',
+                imagenProducto: producto.imagen || '',
+                cantidad: producto.quantity,
+                precioUnitario: producto.precio,
+                subtotal: producto.precio * producto.quantity
+              };
+              detalles.push(detalle);
+            });
+          }
+        }
+      });
+      
+      if (solicitudes.length > 0) {
+        saveSolicitudes(solicitudes);
+        saveDetalles(detalles);
+        console.log(`Migrados ${solicitudes.length} solicitudes y ${detalles.length} detalles`);
+        
+        // Limpiar datos antiguos
+        localStorage.removeItem('nublack_orders');
+      }
+    } catch (error) {
+      console.error('Error migrando datos:', error);
+    }
+  }, []);
+
+  return {
+    // Funciones principales
     getSolicitudes,
-    getCompras,
+    getSolicitudesCompletas,
+    getDetallesSolicitud,
     createSolicitud,
-    createCompra,
-    updateOrderStatus,
-  }), [getAllForUser, getSolicitudes, getCompras, createSolicitud, createCompra, updateOrderStatus]);
-
-  return value;
+    updateSolicitudEstado,
+    
+    // Funciones de productos
+    addProductoToSolicitud,
+    removeProductoFromSolicitud,
+    
+    // Utilidades
+    getEstadisticas,
+    migrarDatosAnteriores,
+    
+    // Datos directos (para debugging)
+    getAllSolicitudes: () => loadSolicitudes(),
+    getAllDetalles: () => loadDetalles()
+  };
 }

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthClient } from "../hooks/useAuthClient.jsx";
+import NBlogo from ".//..//..//..//../public/images/NBlogo.png";
 
 const RegistroCliente = () => {
   const [formData, setFormData] = useState({
@@ -57,21 +58,27 @@ const RegistroCliente = () => {
       <div className="max-w-4xl w-full">
         {/* Logo y título */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#ffcc00] rounded-full mb-4">
-            <span className="text-2xl font-bold text-[#0a0a0a]">NB</span>
+          <div className="inline-flex items-center justify-center w-28 h-28 mb-4">
+            <img
+              src={NBlogo}
+              alt="NUBLACK Logo"
+              className="w-full h-full object-contain rounded-full"
+            />
           </div>
-          <h1 className="text-4xl font-bold text-[#ffcc00] mb-2">NUBLACK</h1>
+          <h1 className="text-4xl font-bold text-[#ffffff] mb-2">NUBLACK</h1>
           <p className="text-[#e5e5e5]">Crea tu cuenta de cliente</p>
         </div>
 
         {/* Formulario */}
         <div className="bg-[#111111] rounded-2xl shadow-2xl p-8 border border-[#333]">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Grid de dos columnas */}
+          <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Tipo de Documento */}
               <div>
-                <label htmlFor="documentType" className="block text-sm font-medium text-[#e5e5e5] mb-2">
+                <label
+                  htmlFor="documentType"
+                  className="block text-sm font-medium text-[#e5e5e5] mb-2"
+                >
                   Tipo de Documento *
                 </label>
                 <select
@@ -80,7 +87,7 @@ const RegistroCliente = () => {
                   value={formData.documentType}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
                 >
                   <option value="">Selecciona un tipo</option>
                   <option value="CC">Cédula de Ciudadanía</option>
@@ -92,7 +99,10 @@ const RegistroCliente = () => {
 
               {/* Número de Documento */}
               <div>
-                <label htmlFor="documentNumber" className="block text-sm font-medium text-[#e5e5e5] mb-2">
+                <label
+                  htmlFor="documentNumber"
+                  className="block text-sm font-medium text-[#e5e5e5] mb-2"
+                >
                   Número de Documento *
                 </label>
                 <input
@@ -102,14 +112,17 @@ const RegistroCliente = () => {
                   value={formData.documentNumber}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
                   placeholder="12345678"
                 />
               </div>
 
               {/* Primer Nombre */}
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-[#e5e5e5] mb-2">
+                <label
+                  htmlFor="firstName"
+                  className="block text-sm font-medium text-[#e5e5e5] mb-2"
+                >
                   Primer Nombre *
                 </label>
                 <input
@@ -119,14 +132,17 @@ const RegistroCliente = () => {
                   value={formData.firstName}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
                   placeholder="Juan"
                 />
               </div>
 
               {/* Primer Apellido */}
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-[#e5e5e5] mb-2">
+                <label
+                  htmlFor="lastName"
+                  className="block text-sm font-medium text-[#e5e5e5] mb-2"
+                >
                   Primer Apellido *
                 </label>
                 <input
@@ -136,14 +152,17 @@ const RegistroCliente = () => {
                   value={formData.lastName}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
                   placeholder="Pérez"
                 />
               </div>
 
               {/* Número de Teléfono */}
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-[#e5e5e5] mb-2">
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium text-[#e5e5e5] mb-2"
+                >
                   Número de Teléfono *
                 </label>
                 <input
@@ -153,14 +172,17 @@ const RegistroCliente = () => {
                   value={formData.phone}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
                   placeholder="3001234567"
                 />
               </div>
 
               {/* Correo Electrónico */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-[#e5e5e5] mb-2">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-[#e5e5e5] mb-2"
+                >
                   Correo Electrónico *
                 </label>
                 <input
@@ -170,14 +192,17 @@ const RegistroCliente = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:border-transparent transition-all"
-                  placeholder="tu@email.com"
+                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
+                  placeholder="registrack@email.com"
                 />
               </div>
 
               {/* Contraseña */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-[#e5e5e5] mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-[#e5e5e5] mb-2"
+                >
                   Contraseña *
                 </label>
                 <input
@@ -187,14 +212,17 @@ const RegistroCliente = () => {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
                   placeholder="••••••••"
                 />
               </div>
 
               {/* Confirmar Contraseña */}
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#e5e5e5] mb-2">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-[#e5e5e5] mb-2"
+                >
                   Confirmar Contraseña *
                 </label>
                 <input
@@ -204,7 +232,7 @@ const RegistroCliente = () => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
                   placeholder="••••••••"
                 />
               </div>
@@ -212,7 +240,7 @@ const RegistroCliente = () => {
 
             {/* Error message */}
             {error && (
-              <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded-lg text-sm mt-6">
                 {error}
               </div>
             )}
@@ -221,7 +249,7 @@ const RegistroCliente = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#4B1E1E] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#6a2b2b] focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:ring-offset-2 focus:ring-offset-[#111111] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#4B1E1E] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#6a2b2b] focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:ring-offset-2 focus:ring-offset-[#111111] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-6"
             >
               {loading ? "Creando cuenta..." : "Crear Cuenta"}
             </button>
@@ -233,7 +261,7 @@ const RegistroCliente = () => {
               ¿Ya tienes una cuenta?{" "}
               <button
                 onClick={() => navigate("/login")}
-                className="text-[#ffcc00] hover:text-[#e6b800] font-medium transition-colors"
+                className="text-[#ffffff] hover:text-[#e5e5e5] font-medium transition-colors"
               >
                 Inicia sesión aquí
               </button>

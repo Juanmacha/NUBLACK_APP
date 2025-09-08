@@ -1,0 +1,28 @@
+
+import React from "react";
+import ProductForm from "./ProductForm";
+import { Package } from "lucide-react";
+
+const ProductModal = ({ product, onClose, onSave, mode }) => {
+  const title = {
+    create: "Crear Nuevo Producto",
+    edit: "Editar Producto",
+    view: "Ver Producto",
+  }[mode];
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div className="bg-white text-gray-900 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-gray-200">
+          <h3 className="text-xl font-semibold flex items-center gap-2 text-blue-600">
+            <Package className="h-5 w-5" />
+            {title}
+          </h3>
+        </div>
+        <ProductForm product={product} onSave={onSave} onClose={onClose} mode={mode} />
+      </div>
+    </div>
+  );
+};
+
+export default ProductModal;

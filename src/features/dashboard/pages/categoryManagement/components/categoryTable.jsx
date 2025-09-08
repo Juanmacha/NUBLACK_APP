@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { PencilSquare, Trash, Eye } from "react-bootstrap-icons";
+import { FaEye, FaPencilAlt, FaTrash } from "react-icons/fa";
 
 const CategoryTable = ({ categorias, onVer, onEditar, onEliminar }) => {
   // Paginación
@@ -45,13 +45,13 @@ const CategoryTable = ({ categorias, onVer, onEditar, onEliminar }) => {
                 </td>
                 <td className="p-3 flex justify-center gap-2">
                   <button onClick={() => onVer(cat)} className="text-blue-500 hover:text-blue-700">
-                    <Eye size={18} />
+                    <FaEye />
                   </button>
                   <button onClick={() => onEditar(cat)} className="text-yellow-500 hover:text-yellow-700">
-                    <PencilSquare size={18} />
+                    <FaPencilAlt />
                   </button>
                   <button onClick={() => onEliminar(cat.id)} className="text-red-500 hover:text-red-700">
-                    <Trash size={18} />
+                    <FaTrash />
                   </button>
                 </td>
               </tr>

@@ -10,8 +10,8 @@ function LoginAdministrador() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     // Ejemplo simple de validación
+
     if (email !== "admin@nublack.com" || password !== "admin123") {
       setError("Credenciales incorrectas, Intenta de nuevo.");
     } else {

@@ -1,6 +1,6 @@
 import React from 'react';
 
-const DeleteProduct = ({ product, onClose, onConfirm }) => {
+const DeleteProduct = ({ producto, onClose, onEliminar }) => {
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
       <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
@@ -8,7 +8,7 @@ const DeleteProduct = ({ product, onClose, onConfirm }) => {
           <h3 className="text-lg font-medium text-gray-900 mb-4">Eliminar Producto</h3>
           <div className="mb-4">
             <p className="text-sm text-gray-600">
-              ¿Estás seguro de que quieres eliminar el producto "{product?.name}"?
+              ¿Estás seguro de que quieres eliminar el producto "{producto?.nombre}"?
             </p>
             <p className="text-sm text-gray-500 mt-2">
               Esta acción no se puede deshacer.
@@ -22,7 +22,7 @@ const DeleteProduct = ({ product, onClose, onConfirm }) => {
               Cancelar
             </button>
             <button
-              onClick={onConfirm}
+              onClick={() => onEliminar(producto.id)}
               className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
             >
               Eliminar

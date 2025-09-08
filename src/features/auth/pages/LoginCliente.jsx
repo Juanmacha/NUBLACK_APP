@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import NBlogo from ".//..//..//..//../public/images/NBlogo.png";
 import { useNavigate } from "react-router-dom";
 import { useAuthClient } from "../hooks/useAuthClient.jsx";
 
@@ -27,7 +28,7 @@ const LoginCliente = () => {
 
     try {
       const session = await login(formData.email, formData.password);
-      
+
       // Redirigir basado en el rol
       if (session.user.role === "Administrador") {
         navigate("/admin/dashboard");
@@ -45,11 +46,16 @@ const LoginCliente = () => {
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Logo y título */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#ffcc00] rounded-full mb-4">
-            <span className="text-2xl font-bold text-[#0a0a0a]">NB</span>
+        <div className="text-center mb-8">  
+          <div className="inline-flex items-center justify-center w-28 h-28 mb-4">
+            <img
+              src={NBlogo}
+              alt="NUBLACK Logo"
+              className="w-full h-full object-contain rounded-full"
+            />
           </div>
-          <h1 className="text-4xl font-bold text-[#ffcc00] mb-2">NUBLACK</h1>
+          <h1 className="text-4xl font-bold text-[#ffffff] mb-2">NUBLACK</h1>
+
           <p className="text-[#e5e5e5]">Inicia sesión en tu cuenta</p>
         </div>
 
@@ -58,7 +64,10 @@ const LoginCliente = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[#e5e5e5] mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-[#e5e5e5] mb-2"
+              >
                 Correo Electrónico
               </label>
               <input
@@ -68,14 +77,17 @@ const LoginCliente = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:border-transparent transition-all"
-                placeholder="tu@email.com"
+                className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
+                placeholder="registrack@email.com"
               />
             </div>
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-[#e5e5e5] mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-[#e5e5e5] mb-2"
+              >
                 Contraseña
               </label>
               <input
@@ -85,7 +97,7 @@ const LoginCliente = () => {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
                 placeholder="••••••••"
               />
             </div>
@@ -113,20 +125,20 @@ const LoginCliente = () => {
               ¿No tienes una cuenta?{" "}
               <button
                 onClick={() => navigate("/registro")}
-                className="text-[#ffcc00] hover:text-[#e6b800] font-medium transition-colors"
+                className="text-[#ffffff] hover:text-[#e5e5e5] font-medium transition-colors"
               >
                 Regístrate aquí
               </button>
             </p>
-          </div>
-
-          {/* Credenciales demo */}
-          <div className="mt-6 p-4 bg-[#1a1a1a] rounded-lg border border-[#333]">
-            <h3 className="text-sm font-medium text-[#e5e5e5] mb-2">Credenciales Demo:</h3>
-            <div className="text-xs text-gray-400 space-y-1">
-              <p><strong>Admin:</strong> admin@nublack.com / admin123</p>
-              <p><strong>Cliente:</strong> Registra una nueva cuenta</p>
-            </div>
+            <p className="text-gray-400 text-sm mt-2">
+              ¿Olvidaste tu contraseña?{" "}
+              <button
+                onClick={() => navigate("/recuperar-contrasena")}
+                className="text-[#ffffff] hover:text-[#e5e5e5] font-medium transition-colors"
+              >
+                Recuperar contraseña
+              </button>
+            </p>
           </div>
         </div>
       </div>

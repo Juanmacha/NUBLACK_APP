@@ -1,0 +1,214 @@
+import React, { useState, useEffect } from "react";
+import { People, Basket3, Folder, Clipboard, GraphUp, CurrencyEuro } from "react-bootstrap-icons";
+import { formatCOPCustom } from "../../../shared/utils/currency";
+
+function DashboardHome() {
+    const [stats, setStats] = useState({
+        usuarios: 0,
+        productos: 0,
+        categorias: 0,
+        solicitudes: 0,
+        detalles: 0,
+        valorTotal: 0
+    });
+
+    useEffect(() => {
+        cargarEstadisticas();
+    }, []);
+
+    const cargarEstadisticas = () => {
+        try {
+            // Cargar usuarios
+            const users = JSON.parse(localStorage.getItem('nublack_users') || '[]');
+            
+            // Cargar productos
+            const products = JSON.parse(localStorage.getItem('nublack_products') || '[]');
+            
+            // Cargar categorías
+            const categories = JSON.parse(localStorage.getItem('nublack_categories') || '[]');
+            
+            // Cargar solicitudes y detalles del nuevo sistema
+            const solicitudes = JSON.parse(localStorage.getItem('nublack_solicitudes') || '[]');
+            const detalles = JSON.parse(localStorage.getItem('nublack_detalles_solicitudes') || '[]');
+            
+            // Calcular estadísticas de solicitudes
+            const solicitudesPendientes = solicitudes.filter(s => s.estado === 'pendiente').length;
+            const solicitudesAprobadas = solicitudes.filter(s => s.estado === 'aprobada').length;
+            const solicitudesEnCamino = solicitudes.filter(s => s.estado === 'en_camino').length;
+            const solicitudesEntregadas = solicitudes.filter(s => s.estado === 'entregada').length;
+            const valorTotal = solicitudes.reduce((sum, s) => sum + (s.total || 0), 0);
+
+            setStats({
+                usuarios: users.length,
+                productos: products.length,
+                categorias: categories.length,
+                solicitudes: solicitudes.length,
+                detalles: detalles.length,
+                valorTotal: valorTotal,
+                solicitudesPendientes,
+                solicitudesAprobadas,
+                solicitudesEnCamino,
+                solicitudesEntregadas
+            });
+        } catch (error) {
+            console.error('Error al cargar estadísticas:', error);
+        }
+    };
+
+    return (
+        <div className="p-6">
+            <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard</h1>
+                <p className="text-gray-600">Bienvenido al panel de control de NUBLACK con sistema de solicitudes separado.</p>
+            </div>
+            
+            {/* Estadísticas principales */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="bg-white p-6 rounded-lg shadow-md border">
+                    <div className="flex items-center">
+                        <People className="w-8 h-8 text-blue-500 mr-3" />
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Usuarios</h3>
+                            <p className="text-3xl font-bold text-blue-600">{stats.usuarios}</p>
+                            <p className="text-sm text-gray-500">Total de usuarios registrados</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="bg-white p-6 rounded-lg shadow-md border">
+                    <div className="flex items-center">
+                        <Basket3 className="w-8 h-8 text-green-500 mr-3" />
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Productos</h3>
+                            <p className="text-3xl font-bold text-green-600">{stats.productos}</p>
+                            <p className="text-sm text-gray-500">Productos en catálogo</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="bg-white p-6 rounded-lg shadow-md border">
+                    <div className="flex items-center">
+                        <Folder className="w-8 h-8 text-purple-500 mr-3" />
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Categorías</h3>
+                            <p className="text-3xl font-bold text-purple-600">{stats.categorias}</p>
+                            <p className="text-sm text-gray-500">Categorías disponibles</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="bg-white p-6 rounded-lg shadow-md border">
+                    <div className="flex items-center">
+                        <Clipboard className="w-8 h-8 text-orange-500 mr-3" />
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Solicitudes</h3>
+                            <p className="text-3xl font-bold text-orange-600">{stats.solicitudes}</p>
+                            <p className="text-sm text-gray-500">Total de solicitudes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Estadísticas de solicitudes */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="bg-white p-6 rounded-lg shadow-md border border-yellow-200">
+                    <div className="flex items-center">
+                        <Clipboard className="w-8 h-8 text-yellow-500 mr-3" />
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Pendientes</h3>
+                            <p className="text-3xl font-bold text-yellow-600">{stats.solicitudesPendientes}</p>
+                            <p className="text-sm text-gray-500">Solicitudes por revisar</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="bg-white p-6 rounded-lg shadow-md border border-green-200">
+                    <div className="flex items-center">
+                        <Clipboard className="w-8 h-8 text-green-500 mr-3" />
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Aprobadas</h3>
+                            <p className="text-3xl font-bold text-green-600">{stats.solicitudesAprobadas}</p>
+                            <p className="text-sm text-gray-500">Solicitudes aprobadas</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="bg-white p-6 rounded-lg shadow-md border border-blue-200">
+                    <div className="flex items-center">
+                        <Clipboard className="w-8 h-8 text-blue-500 mr-3" />
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">En Camino</h3>
+                            <p className="text-3xl font-bold text-blue-600">{stats.solicitudesEnCamino}</p>
+                            <p className="text-sm text-gray-500">Solicitudes en entrega</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="bg-white p-6 rounded-lg shadow-md border border-purple-200">
+                    <div className="flex items-center">
+                        <Clipboard className="w-8 h-8 text-purple-500 mr-3" />
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Entregadas</h3>
+                            <p className="text-3xl font-bold text-purple-600">{stats.solicitudesEntregadas}</p>
+                            <p className="text-sm text-gray-500">Solicitudes completadas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Estadísticas financieras */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="bg-white p-6 rounded-lg shadow-md border border-emerald-200">
+                    <div className="flex items-center">
+                        <CurrencyEuro className="w-8 h-8 text-emerald-500 mr-3" />
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Valor Total</h3>
+                            <p className="text-3xl font-bold text-emerald-600">{formatCOPCustom(stats.valorTotal)}</p>
+                            <p className="text-sm text-gray-500">Valor total de todas las solicitudes</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="bg-white p-6 rounded-lg shadow-md border border-indigo-200">
+                    <div className="flex items-center">
+                        <GraphUp className="w-8 h-8 text-indigo-500 mr-3" />
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Detalles</h3>
+                            <p className="text-3xl font-bold text-indigo-600">{stats.detalles}</p>
+                            <p className="text-sm text-gray-500">Total de productos solicitados</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Información del sistema */}
+            <div className="bg-white p-6 rounded-lg shadow-md border">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Información del Sistema</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p className="text-gray-600"><strong>Estructura de datos:</strong> Sistema separado (Solicitudes + Detalles)</p>
+                        <p className="text-gray-600"><strong>Almacenamiento:</strong> LocalStorage optimizado</p>
+                        <p className="text-gray-600"><strong>Migración:</strong> Compatible con datos anteriores</p>
+                    </div>
+                    <div>
+                        <p className="text-gray-600"><strong>Última actualización:</strong> {new Date().toLocaleString()}</p>
+                        <p className="text-gray-600"><strong>Estado:</strong> Funcionando correctamente</p>
+                        <p className="text-gray-600"><strong>Versión:</strong> 2.0 - Estructura Separada</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Botón de actualizar */}
+            <div className="mt-6">
+                <button
+                    onClick={cargarEstadisticas}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                    Actualizar Estadísticas
+                </button>
+            </div>
+        </div>
+    );
+}
+
+export default DashboardHome;
