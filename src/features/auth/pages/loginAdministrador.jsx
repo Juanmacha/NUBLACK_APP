@@ -1,23 +1,29 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // 👈 Importa el hook
-import logo from "/images/NBlogo.png";
+import { useNavigate } from "react-router-dom";
+import { useAuthClient } from "../context/AuthClientContext"; // Import useAuthClient
 
 function LoginAdministrador() {
-  const navigate = useNavigate(); // 👈 Inicializa navigate
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const { login } = useAuthClient(); // Use the login function from context
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => { // Make handleSubmit async
     e.preventDefault();
-    // Ejemplo simple de validación
+    setError(""); // Clear previous errors
 
-    if (email !== "admin@nublack.com" || password !== "admin123") {
-      setError("Credenciales incorrectas, Intenta de nuevo.");
-    } else {
-      setError("");
-      alert("Inicio de sesión correcto!");
-      navigate("/admin/dashboard");
+    try {
+      const session = await login(email, password); // Use login from context
+      if (session.user.role === "Administrador") {
+        navigate("/admin/dashboard");
+      } else {
+        // Optionally handle non-admin login here, though it should be caught by LoginCliente
+        setError("Acceso denegado: Solo administradores pueden iniciar sesión aquí.");
+      }
+    } catch (err) {
+      // SweetAlert from context will handle the notification, just set local error for display
+      setError(err.message);
     }
   };
 
@@ -28,7 +34,7 @@ function LoginAdministrador() {
         {/* Logo y título */}
         <div className="flex flex-col items-center mb-6">
           <img
-            src={logo}
+            src="/images/NBlogo.png"
             alt="Logo"
             className="w-28 h-28 mb-4 rounded-full shadow-lg"
           />
@@ -96,3 +102,5 @@ function LoginAdministrador() {
 }
 
 export default LoginAdministrador;
+
+

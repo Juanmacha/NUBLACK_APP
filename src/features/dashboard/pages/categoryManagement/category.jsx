@@ -1,13 +1,11 @@
 import React, { useState } from "react";
 import CategoryTable from "./components/categoryTable";
 import { useCategories } from "./hooks/useCategories";
-import { Notification } from "./components/Notification";
-
 // Modales
 import VerCategoriaModal from "./components/seeCategory";
 import EditarCategoriaModal from "./components/editCategory";
-import ConfirmationReasonModal from "../../components/ConfirmationReasonModal"; // Import the new modal
 import CrearCategoriaModal from "./components/categoryCreate";
+import Swal from 'sweetalert2';
 
 function Category() {
   const [busqueda, setBusqueda] = useState("");
@@ -17,10 +15,7 @@ function Category() {
 
   const [modalVer, setModalVer] = useState(null);
   const [modalEditar, setModalEditar] = useState(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // State for confirmation modal
-  const [categoryToDelete, setCategoryToDelete] = useState(null); // State to hold category to delete
   const [modalCrear, setModalCrear] = useState(false);
-  const [notification, setNotification] = useState(null);
 
   // Filtro de categorías
   const categoriasFiltradas = categories.filter((cat) => {
@@ -38,29 +33,67 @@ function Category() {
     return matchBusqueda && matchEstado;
   });
 
-  const handleCrearCategoria = (nuevaCategoria) => {
-    createCategory(nuevaCategoria);
-  };
-
-  const handleDeleteClick = (category) => {
-    setCategoryToDelete(category);
-    setShowDeleteConfirm(true);
-  };
-
-  const handleConfirmDelete = async (reason) => {
+  const handleCrearCategoria = async (nuevaCategoria) => {
     try {
-      await deleteCategory(categoryToDelete.id, reason);
-      setNotification({ message: `Categoría '${categoryToDelete.nombre}' eliminada con éxito.`, type: 'success' });
+      await createCategory(nuevaCategoria);
+      Swal.fire(
+        '¡Creada!',
+        'La categoría ha sido creada exitosamente.',
+        'success'
+      );
     } catch (error) {
-      setNotification({ message: error.message, type: 'error' });
-    } finally {
-      setShowDeleteConfirm(false);
-      setCategoryToDelete(null);
+      Swal.fire(
+        'Error',
+        error.message || 'Hubo un problema al crear la categoría.',
+        'error'
+      );
     }
   };
 
-  const handleCloseNotification = () => {
-    setNotification(null);
+  const handleDeleteCategory = (id) => {
+    Swal.fire({
+      title: 'Confirmar Eliminación de Categoría',
+      text: `¿Estás seguro de que deseas eliminar la categoría con ID: ${id}? Esta acción es irreversible.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        const { value: reason } = await Swal.fire({
+          title: 'Motivo de la eliminación',
+          input: 'textarea',
+          inputPlaceholder: 'Escribe el motivo de la eliminación...',
+          inputValidator: (value) => {
+            if (!value) {
+              return 'Necesitas escribir un motivo.';
+            }
+          },
+          showCancelButton: true,
+          confirmButtonText: 'Confirmar',
+          cancelButtonText: 'Cancelar'
+        });
+
+        if (reason) {
+          try {
+            await deleteCategory(id, reason);
+            Swal.fire(
+              '¡Eliminada!',
+              'La categoría ha sido eliminada.',
+              'success'
+            );
+          } catch (error) {
+            Swal.fire(
+              'Error',
+              error.message || 'Hubo un problema al eliminar la categoría.',
+              'error'
+            );
+          }
+        }
+      }
+    });
   };
 
   return (
@@ -113,7 +146,7 @@ function Category() {
         categorias={categoriasFiltradas}
         onVer={(cat) => setModalVer(cat)}
         onEditar={(cat) => setModalEditar(cat)}
-        onEliminar={(cat) => handleDeleteClick(cat)} // Pass the whole category object
+        onEliminar={(id) => handleDeleteCategory(id)}
       />
 
       {/* Modales */}
@@ -122,28 +155,26 @@ function Category() {
         <EditarCategoriaModal
           categoria={modalEditar}
           onClose={() => setModalEditar(null)}
-          onGuardar={(data) => updateCategory(data.id, data)}
-        />
-      )}
-      {showDeleteConfirm && categoryToDelete && (
-        <ConfirmationReasonModal
-          show={showDeleteConfirm}
-          onClose={() => setShowDeleteConfirm(false)}
-          onConfirm={handleConfirmDelete}
-          title="Confirmar Eliminación de Categoría"
-          message={`¿Estás seguro que deseas eliminar la categoría '${categoryToDelete.nombre}'? Esta acción no se puede deshacer.`}
-          placeholder="Escribe el motivo de la eliminación..."
+          onGuardar={async (data) => {
+            try {
+              await updateCategory(data.id, data);
+              Swal.fire(
+                '¡Actualizada!',
+                'La categoría ha sido actualizada exitosamente.',
+                'success'
+              );
+              setModalEditar(null);
+            } catch (error) {
+              Swal.fire(
+                'Error',
+                error.message || 'Hubo un problema al actualizar la categoría.',
+                'error'
+              );
+            }
+          }}
         />
       )}
       {modalCrear && <CrearCategoriaModal onClose={() => setModalCrear(false)} onCrear={handleCrearCategoria} />}
-
-      {notification && (
-        <Notification
-          message={notification.message}
-          type={notification.type}
-          onClose={handleCloseNotification}
-        />
-      )}
     </div>
   );
 }

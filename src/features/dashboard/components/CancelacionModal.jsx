@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 
 const CancelacionModal = ({ show, onClose, onConfirm }) => {
   const [justificacion, setJustificacion] = useState('');
@@ -9,7 +10,12 @@ const CancelacionModal = ({ show, onClose, onConfirm }) => {
 
   const handleConfirm = () => {
     if (!justificacion.trim()) {
-      alert('Por favor, ingrese una justificación.');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Justificación Requerida',
+        text: 'Por favor, ingrese una justificación para la cancelación.',
+        confirmButtonText: 'Entendido'
+      });
       return;
     }
     onConfirm(justificacion);

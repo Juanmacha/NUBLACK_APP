@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
+import Swal from 'sweetalert2';
 
 const AuthClientContext = createContext();
 
@@ -31,6 +32,11 @@ const loadClients = () => {
     return stored ? JSON.parse(stored) : [];
   } catch (error) {
     console.error('Error loading clients:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error de Almacenamiento',
+      text: 'Hubo un problema al cargar los datos de clientes. Por favor, recarga la página.',
+    });
     return [];
   }
 };
@@ -40,6 +46,11 @@ const saveClients = (clients) => {
     localStorage.setItem(CLIENT_STORAGE_KEY, JSON.stringify(clients));
   } catch (error) {
     console.error('Error saving clients:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error de Almacenamiento',
+      text: 'Hubo un problema al guardar los datos de clientes. Por favor, inténtalo de nuevo.',
+    });
   }
 };
 
@@ -49,6 +60,11 @@ const loadSession = () => {
     return stored ? JSON.parse(stored) : null;
   } catch (error) {
     console.error('Error loading session:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error de Sesión',
+      text: 'Hubo un problema al cargar la sesión. Por favor, inicia sesión nuevamente.',
+    });
     return null;
   }
 };
@@ -58,6 +74,11 @@ const saveSession = (session) => {
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
   } catch (error) {
     console.error('Error saving session:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error de Sesión',
+      text: 'Hubo un problema al guardar la sesión. Por favor, inténtalo de nuevo.',
+    });
   }
 };
 
@@ -66,6 +87,11 @@ const clearSession = () => {
     localStorage.removeItem(SESSION_STORAGE_KEY);
   } catch (error) {
     console.error('Error clearing session:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error de Sesión',
+      text: 'Hubo un problema al cerrar la sesión. Por favor, inténtalo de nuevo.',
+    });
   }
 };
 
@@ -91,6 +117,11 @@ const authReducer = (state, action) => {
         user: action.payload.user, 
         token: action.payload.token, 
         loading: false 
+      };
+    case 'UPDATE_USER':
+      return {
+        ...state,
+        user: { ...state.user, ...action.payload },
       };
     default:
       return state;
@@ -126,19 +157,20 @@ export const AuthClientProvider = ({ children }) => {
         const token = `admin-${Date.now()}`;
         const session = {
           user: {
-            name: ADMIN_DEMO.name,
-            email: ADMIN_DEMO.email,
-            role: ADMIN_DEMO.role,
-            firstName: ADMIN_DEMO.firstName,
-            lastName: ADMIN_DEMO.lastName,
-            phone: ADMIN_DEMO.phone,
-            documentType: ADMIN_DEMO.documentType,
-            documentNumber: ADMIN_DEMO.documentNumber,
+            id: 'admin',
+            ...ADMIN_DEMO
           },
           token,
         };
         saveSession(session);
         dispatch({ type: 'LOGIN_SUCCESS', payload: session });
+        Swal.fire({
+          icon: 'success',
+          title: '¡Inicio de Sesión Exitoso!',
+          text: `Bienvenido, ${session.user.name || session.user.email}.`,
+          showConfirmButton: false,
+          timer: 1500
+        });
         return session;
       }
 
@@ -155,6 +187,7 @@ export const AuthClientProvider = ({ children }) => {
       
       const session = {
         user: {
+          id: found.email, // Usar email como id único para clientes
           name: displayName || found.email,
           email: found.email,
           role: found.role || "Cliente",
@@ -169,9 +202,21 @@ export const AuthClientProvider = ({ children }) => {
       
       saveSession(session);
       dispatch({ type: 'LOGIN_SUCCESS', payload: session });
+      Swal.fire({
+        icon: 'success',
+        title: '¡Inicio de Sesión Exitoso!',
+        text: `Bienvenido, ${session.user.name || session.user.email}.`,
+        showConfirmButton: false,
+        timer: 1500
+      });
       return session;
     } catch (err) {
       dispatch({ type: 'LOGIN_ERROR', payload: err.message });
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de Inicio de Sesión',
+        text: err.message || 'Hubo un problema al iniciar sesión. Por favor, verifica tus credenciales.',
+      });
       throw err;
     }
   }, []);
@@ -188,13 +233,8 @@ export const AuthClientProvider = ({ children }) => {
       }
 
       const newClient = {
-        documentType: userData.documentType || null,
-        documentNumber: userData.documentNumber || null,
-        firstName: userData.firstName || null,
-        lastName: userData.lastName || null,
-        phone: userData.phone || null,
-        email: userData.email,
-        password: userData.password,
+        id: email, // Usar email como id único
+        ...userData,
         role: "Cliente",
         name: userData.name || `${userData.firstName || ""} ${userData.lastName || ""}`.trim(),
       };
@@ -207,6 +247,7 @@ export const AuthClientProvider = ({ children }) => {
       
       const session = {
         user: {
+          id: newClient.id,
           name: displayName || newClient.email,
           email: newClient.email,
           role: newClient.role,
@@ -221,9 +262,21 @@ export const AuthClientProvider = ({ children }) => {
       
       saveSession(session);
       dispatch({ type: 'LOGIN_SUCCESS', payload: session });
+      Swal.fire({
+        icon: 'success',
+        title: '¡Registro Exitoso!',
+        text: 'Tu cuenta ha sido creada y has iniciado sesión.',
+        showConfirmButton: false,
+        timer: 1500
+      });
       return session;
     } catch (err) {
       dispatch({ type: 'LOGIN_ERROR', payload: err.message });
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de Registro',
+        text: err.message || 'Hubo un problema al registrar tu cuenta. Por favor, inténtalo de nuevo.',
+      });
       throw err;
     }
   }, []);
@@ -231,6 +284,26 @@ export const AuthClientProvider = ({ children }) => {
   const logout = useCallback(() => {
     clearSession();
     dispatch({ type: 'LOGOUT' });
+    Swal.fire({
+      icon: 'info',
+      title: 'Sesión Cerrada',
+      text: 'Has cerrado sesión exitosamente.',
+      showConfirmButton: false,
+      timer: 1500
+    });
+  }, []);
+
+  const setUser = useCallback((userData) => {
+    dispatch({ type: 'UPDATE_USER', payload: userData });
+    // También actualiza la sesión para persistir los cambios
+    const session = loadSession();
+    if (session) {
+      const updatedSession = {
+        ...session,
+        user: { ...session.user, ...userData },
+      };
+      saveSession(updatedSession);
+    }
   }, []);
 
   const value = {
@@ -241,6 +314,7 @@ export const AuthClientProvider = ({ children }) => {
     login,
     register,
     logout,
+    setUser, // Exponer la función para actualizar el usuario
   };
 
   return (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaEye, FaPencilAlt, FaTrash } from 'react-icons/fa';
+import { Eye, PencilSquare, Trash } from 'react-bootstrap-icons';
 
 const ProductTable = ({ products, onVer, onEditar, onEliminar }) => {
   return (
@@ -7,6 +7,9 @@ const ProductTable = ({ products, onVer, onEditar, onEliminar }) => {
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              ID
+            </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Producto
             </th>
@@ -28,8 +31,9 @@ const ProductTable = ({ products, onVer, onEditar, onEliminar }) => {
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {products.map((product) => (
+          {products.map((product, index) => (
             <tr key={product.id} className="hover:bg-gray-50">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 h-10 w-10">
@@ -72,21 +76,21 @@ const ProductTable = ({ products, onVer, onEditar, onEliminar }) => {
                     className="text-blue-600 hover:text-blue-900"
                     title="Ver detalles"
                   >
-                    <FaEye />
+                    <Eye className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => onEditar(product)}
                     className="text-green-600 hover:text-green-900"
                     title="Editar"
                   >
-                    <FaPencilAlt />
+                    <PencilSquare className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => onEliminar(product.id)}
                     className="text-red-600 hover:text-red-900"
                     title="Eliminar"
                   >
-                    <FaTrash />
+                    <Trash className="w-4 h-4" />
                   </button>
                 </div>
               </td>

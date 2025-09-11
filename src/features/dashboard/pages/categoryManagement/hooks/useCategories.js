@@ -109,7 +109,7 @@ export const useCategories = () => {
     }
   }, [categories]);
 
-  const deleteCategory = useCallback(async (id, reason) => {
+  const deleteCategory = useCallback(async (id) => {
     try {
       const products = loadProducts(); // Load products to check for associations
       const categoryToDelete = categories.find(cat => cat.id === id);
@@ -127,7 +127,7 @@ export const useCategories = () => {
       const updatedCategories = categories.filter(category => category.id !== id);
       setCategories(updatedCategories);
       saveCategories(updatedCategories);
-      console.log(`Categoría ${categoryToDelete.nombre} eliminada. Motivo: ${reason}`);
+      console.log(`Categoría ${categoryToDelete.nombre} eliminada.`);
     } catch (err) {
       throw new Error(err.message || 'Error al eliminar categoría');
     }

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { PersonCircle, GearFill, BoxArrowRight, HouseDoor, People, Folder, Basket3, Clipboard, Search } from "react-bootstrap-icons";
+import { useAuthClient } from '../../auth/hooks/useAuthClient';
 
 const selections = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: HouseDoor },
@@ -12,7 +13,14 @@ const selections = [
 
 function Sidebar() {
     const location = useLocation();
+    const navigate = useNavigate();
+    const { logout } = useAuthClient();
     
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
+
     return (
         <div className='flex h-full w-64 flex-col bg-[#0a0a0a] border-r border-gray-800'>
             {/* Encabezado */}
@@ -45,7 +53,10 @@ function Sidebar() {
 
             {/* Usuario */}
             <div className="border-t border-gray-800 p-4">
-                <div className="flex items-center gap-3 mb-4">
+                <div 
+                    className="flex items-center gap-3 mb-4 cursor-pointer"
+                    onClick={() => navigate('/admin/dashboard/perfil')}
+                >
                     <PersonCircle size={32} className="text-gray-500" />
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-[#e5e5e5] truncate">Administrador</p>
@@ -72,11 +83,7 @@ function Sidebar() {
                     className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium
                         text-red-500 hover:bg-[#1a1a1a] hover:text-red-400 
                         transition-colors duration-200 ease-in-out w-full text-left"
-                    onClick={() => {
-                        console.log("Cerrar sesión clickeado");
-                        alert("Sesión cerrada");
-                        window.location.href = "/admin";
-                    }}
+                    onClick={handleLogout}
                 >
                     <BoxArrowRight className="h-5 w-5" />
                     Cerrar Sesión

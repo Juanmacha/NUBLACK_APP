@@ -1,87 +1,82 @@
-import React, { useState } from "react";
-import { FaEye, FaPencilAlt, FaTrash } from "react-icons/fa";
+import React from 'react';
+import { Eye, PencilSquare, Trash } from 'react-bootstrap-icons';
 
 const CategoryTable = ({ categorias, onVer, onEditar, onEliminar }) => {
-  // Paginación
-  const [paginaActual, setPaginaActual] = useState(1);
-  const registrosPorPagina = 4;
-  const indiceUltimoRegistro = paginaActual * registrosPorPagina;
-  const indicePrimerRegistro = indiceUltimoRegistro - registrosPorPagina;
-  const categoriasActuales = categorias.slice(indicePrimerRegistro, indiceUltimoRegistro);
-  const totalPaginas = Math.ceil(categorias.length / registrosPorPagina);
-
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-lg font-bold mb-1">
-        Categorías ({categorias.length})
-      </h2>
-
-      <p className="text-sm text-gray-500 mb-4">Administra las categorías registradas</p>
-
-      <div className="overflow-y-auto max-h-[300px] border rounded-lg">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-100 sticky top-0">
-            <tr>
-              <th className="p-3 text-left">ID</th>
-              <th className="p-3 text-left">Nombre</th>
-              <th className="p-3 text-left">Descripción</th>
-              <th className="p-3 text-left">Estado</th>
-              <th className="p-3 text-center">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {categoriasActuales.map((cat) => (
-              <tr key={cat.id} className="hover:bg-gray-50 border-t">
-                <td className="p-3">{cat.id}</td>
-                <td className="p-3">{cat.nombre}</td>
-                <td className="p-3">{cat.descripcion}</td>
-                <td className="p-3">
-                  <span
-                    className={`px-2 py-1 text-xs rounded ${cat.estado === "Activo" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                      }`}
+    <div className="bg-white shadow-md rounded-lg overflow-hidden">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              ID
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Nombre
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Descripción
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Estado
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Acciones
+            </th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {categorias.map((category, index) => (
+            <tr key={category.id} className="hover:bg-gray-50">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm font-medium text-gray-900">{category.nombre}</div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {category.descripcion}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  category.estado === 'Activo' 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {category.estado}
+                </span>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => onVer(category)}
+                    className="text-blue-600 hover:text-blue-900"
+                    title="Ver detalles"
                   >
-                    {cat.estado}
-                  </span>
-                </td>
-                <td className="p-3 flex justify-center gap-2">
-                  <button onClick={() => onVer(cat)} className="text-blue-500 hover:text-blue-700">
-                    <FaEye />
+                    <Eye className="w-4 h-4" />
                   </button>
-                  <button onClick={() => onEditar(cat)} className="text-yellow-500 hover:text-yellow-700">
-                    <FaPencilAlt />
+                  <button
+                    onClick={() => onEditar(category)}
+                    className="text-green-600 hover:text-green-900"
+                    title="Editar"
+                  >
+                    <PencilSquare className="w-4 h-4" />
                   </button>
-                  <button onClick={() => onEliminar(cat.id)} className="text-red-500 hover:text-red-700">
-                    <FaTrash />
+                  <button
+                    onClick={() => onEliminar(category.id)}
+                    className="text-red-600 hover:text-red-900"
+                    title="Eliminar"
+                  >
+                    <Trash className="w-4 h-4" />
                   </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Paginador */}
-      <div className="flex justify-between items-center mt-4">
-        <p className="text-sm text-gray-500">
-          Página {paginaActual} de {totalPaginas}
-        </p>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setPaginaActual((prev) => Math.max(prev - 1, 1))}
-            disabled={paginaActual === 1}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            Anterior
-          </button>
-          <button
-            onClick={() => setPaginaActual((prev) => Math.min(prev + 1, totalPaginas))}
-            disabled={paginaActual === totalPaginas}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            Siguiente
-          </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {categorias.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          No hay categorías disponibles
         </div>
-      </div>
+      )}
     </div>
   );
 };

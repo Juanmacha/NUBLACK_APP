@@ -70,6 +70,7 @@ export const useUsers = () => {
       const newUser = {
         id: generateId(),
         ...userData,
+        name: `${userData.firstName} ${userData.lastName}`,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -87,12 +88,20 @@ export const useUsers = () => {
     try {
       // No permitir editar el admin demo
       if (id === 'admin-demo') {
-        throw new Error('No se puede editar el administrador demo');
+        // Permite la edición de ciertos campos para el admin demo
+        const updatedUsers = users.map(user =>
+          user.id === id
+            ? { ...user, ...userData, name: `${userData.firstName} ${userData.lastName}`, updatedAt: new Date().toISOString() }
+            : user
+        );
+        setUsers(updatedUsers);
+        saveUsers(updatedUsers);
+        return updatedUsers.find(u => u.id === id);
       }
 
       const updatedUsers = users.map(user =>
         user.id === id
-          ? { ...user, ...userData, updatedAt: new Date().toISOString() }
+          ? { ...user, ...userData, name: `${userData.firstName} ${userData.lastName}`, updatedAt: new Date().toISOString() }
           : user
       );
       setUsers(updatedUsers);

@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import Swal from 'sweetalert2';
 import { useCategories } from "../../categoryManagement/hooks/useCategories";
 import { Upload, X } from "lucide-react";
 
@@ -76,7 +77,12 @@ const ProductForm = ({ product, onSave, onClose, mode }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.categoria) {
-      alert("Por favor selecciona una categoría");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campo Requerido',
+        text: 'Por favor selecciona una categoría',
+        confirmButtonText: 'Entendido'
+      });
       return;
     }
     onSave(formData);

@@ -5,6 +5,7 @@ import { useCart } from "../hooks/useCart";
 import SolicitudModal from "../components/SolicitudModal";
 import { useOrders } from "../hooks/useOrders";
 import { formatCOPCustom } from "../../../shared/utils/currency";
+import Swal from 'sweetalert2';
 
 const CarritoPage = () => {
   const { user } = useAuthClient();
@@ -26,7 +27,12 @@ const CarritoPage = () => {
 
   const handleRealizarSolicitud = () => {
     if (cart.length === 0) {
-      alert("Tu carrito está vacío");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Carrito Vacío',
+        text: 'Tu carrito está vacío. Agrega productos antes de realizar una solicitud.',
+        confirmButtonText: 'Entendido'
+      });
       return;
     }
     setShowSolicitudModal(true);
@@ -39,11 +45,21 @@ const CarritoPage = () => {
       
       clearCart();
       setShowSolicitudModal(false);
-      alert("Solicitud enviada exitosamente. Te contactaremos pronto.");
+      Swal.fire({
+        icon: 'success',
+        title: '¡Solicitud Enviada!',
+        text: 'Tu solicitud ha sido enviada exitosamente. Te contactaremos pronto para la entrega de tu pedido.',
+        showConfirmButton: false,
+        timer: 3000
+      });
       navigate("/perfil");
     } catch (error) {
       console.error('Error al crear solicitud:', error);
-      alert("Error al enviar la solicitud: " + error.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al enviar solicitud',
+        text: 'Hubo un problema al enviar tu solicitud: ' + (error.message || 'Error desconocido'),
+      });
     }
   };
 
@@ -220,6 +236,7 @@ const CarritoPage = () => {
         onConfirm={handleConfirmarSolicitud}
         cart={cart}
         subtotal={subtotal}
+        user={user}
       />
     </div>
   );

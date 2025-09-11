@@ -5,7 +5,7 @@ import UserCreate from './components/userCreate';
 import EditUser from './components/editUser';
 import DeleteUser from './components/deleteUser';
 import SeeUser from './components/seeUser';
-import Notification from './components/Notification';
+import Swal from 'sweetalert2';
 
 const User = () => {
   const { users, loading, error, createUser, updateUser, deleteUser } = useUsers();
@@ -16,7 +16,6 @@ const User = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [notification, setNotification] = useState({ show: false, message: '', type: '' });
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = !searchTerm || 
@@ -62,8 +61,13 @@ const User = () => {
   };
 
   const showNotification = (message, type) => {
-    setNotification({ show: true, message, type });
-    setTimeout(() => setNotification({ show: false, message: '', type: '' }), 3000);
+    Swal.fire({
+      icon: type,
+      title: type === 'success' ? 'Éxito' : 'Error',
+      text: message,
+      timer: 3000,
+      showConfirmButton: false,
+    });
   };
 
   return (
@@ -168,14 +172,6 @@ const User = () => {
             setShowViewModal(false);
             setSelectedUser(null);
           }}
-        />
-      )}
-
-      {notification.show && (
-        <Notification
-          message={notification.message}
-          type={notification.type}
-          onClose={() => setNotification({ show: false, message: '', type: '' })}
         />
       )}
     </div>

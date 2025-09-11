@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import NBlogo from ".//..//..//..//../public/images/NBlogo.png";
 import { useNavigate } from "react-router-dom";
 import { useAuthClient } from "../hooks/useAuthClient.jsx";
 
@@ -49,7 +48,7 @@ const LoginCliente = () => {
         <div className="text-center mb-8">  
           <div className="inline-flex items-center justify-center w-28 h-28 mb-4">
             <img
-              src={NBlogo}
+              src="/images/NBlogo.png"
               alt="NUBLACK Logo"
               className="w-full h-full object-contain rounded-full"
             />

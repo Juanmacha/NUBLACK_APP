@@ -15,6 +15,7 @@ import Category from "../features/dashboard/pages/categoryManagement/category";
 import Product from "../features/dashboard/pages/productManagement/product";
 import User from "../features/dashboard/pages/userManagement/user";
 import Solicitudes from "../features/dashboard/pages/solicitudes";
+import PerfilAdmin from "../features/dashboard/pages/PerfilAdmin";
 
 const AppRoutes = () => {
     return (
@@ -36,6 +37,7 @@ const AppRoutes = () => {
                 <Route path="productos" element={<Product />} />
                 <Route path="usuarios" element={<User />} />
                 <Route path="solicitudes" element={<Solicitudes />} />
+                <Route path="perfil" element={<PerfilAdmin />} />
             </Route>
             
             <Route path="*" element={<Navigate to="/" />} />

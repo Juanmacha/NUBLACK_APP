@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaEye, FaPencilAlt, FaTrash } from 'react-icons/fa';
+import { Eye, PencilSquare, Trash } from 'react-bootstrap-icons';
 
 const UserTable = ({ users, onView, onEdit, onDelete }) => {
   return (
@@ -7,6 +7,9 @@ const UserTable = ({ users, onView, onEdit, onDelete }) => {
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              ID
+            </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Usuario
             </th>
@@ -25,8 +28,9 @@ const UserTable = ({ users, onView, onEdit, onDelete }) => {
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {users.map((user) => (
+          {users.map((user, index) => (
             <tr key={user.id} className="hover:bg-gray-50">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div>
                   <div className="text-sm font-medium text-gray-900">{user.name}</div>
@@ -54,21 +58,21 @@ const UserTable = ({ users, onView, onEdit, onDelete }) => {
                     onClick={() => onView(user)}
                     className="text-blue-600 hover:text-blue-900"
                   >
-                    <FaEye />
+                    <Eye className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => onEdit(user)}
                     className="text-green-600 hover:text-green-900"
                     disabled={user.id === 'admin-demo'}
                   >
-                    <FaPencilAlt />
+                    <PencilSquare className="w-4 h-4" />
                   </button>
                   {user.id !== 'admin-demo' && (
                     <button
                       onClick={() => onDelete(user)}
                       className="text-red-600 hover:text-red-900"
                     >
-                      <FaTrash />
+                      <Trash className="w-4 h-4" />
                     </button>
                   )}
                 </div>

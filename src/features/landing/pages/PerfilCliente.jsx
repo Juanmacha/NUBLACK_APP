@@ -1,17 +1,36 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuthClient } from "../../auth/hooks/useAuthClient.jsx";
 import { useOrders } from "../hooks/useOrders";
 import { formatCOPCustom } from "../../../shared/utils/currency";
+import Swal from 'sweetalert2';
 
 const PerfilCliente = () => {
-  const { user } = useAuthClient();
+  const { user, updateUser } = useAuthClient();
   const { getSolicitudesCompletas } = useOrders();
   const [solicitudes, setSolicitudes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [userData, setUserData] = useState({
+    name: "",
+    email: "",
+    documentType: "",
+    documentNumber: "",
+    phone: "",
+  });
+  const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
       cargarSolicitudes();
+      setUserData({
+        name: user.name || "",
+        email: user.email || "",
+        documentType: user.documentType || "",
+        documentNumber: user.documentNumber || "",
+        phone: user.phone || "",
+      });
     }
   }, [user]);
 
@@ -20,18 +39,90 @@ const PerfilCliente = () => {
       const solicitudesCompletas = getSolicitudesCompletas();
       setSolicitudes(solicitudesCompletas);
     } catch (error) {
-      console.error('Error al cargar solicitudes:', error);
+      console.error("Error al cargar solicitudes:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al cargar solicitudes',
+        text: 'Hubo un problema al cargar tus solicitudes. Por favor, inténtalo de nuevo más tarde.',
+      });
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    if (user) {
+      setUserData({
+        name: user.name || "",
+        email: user.email || "",
+        documentType: user.documentType || "",
+        documentNumber: user.documentNumber || "",
+        phone: user.phone || "",
+      });
+    }
+    setErrors({});
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    if (!userData.name) newErrors.name = "El nombre es requerido.";
+    if (!userData.documentType) newErrors.documentType = "El tipo de documento es requerido.";
+    if (!userData.documentNumber) newErrors.documentNumber = "El número de documento es requerido.";
+    if (!userData.phone) newErrors.phone = "El teléfono es requerido.";
+    if (!userData.email) {
+      newErrors.email = "El correo electrónico es requerido.";
+    } else if (!/\S+@\S+\.\S+/.test(userData.email)) {
+      newErrors.email = "El formato del correo electrónico no es válido.";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validate()) {
+      return;
+    }
+    try {
+      await updateUser(userData);
+      setIsEditing(false);
+      Swal.fire({
+        icon: 'success',
+        title: '¡Perfil Actualizado!',
+        text: 'Tu información de perfil ha sido actualizada correctamente.',
+        showConfirmButton: false,
+        timer: 1500
+      });
+    } catch (error) {
+      console.error("Error al actualizar el perfil:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al actualizar perfil',
+        text: 'Hubo un problema al actualizar tu perfil. Por favor, inténtalo de nuevo.',
+      });
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setUserData((prev) => ({ ...prev, [name]: value }));
   };
 
   if (!user) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-[#e5e5e5] mb-4">Acceso Denegado</h1>
-          <p className="text-gray-400">Debes iniciar sesión para ver tu perfil</p>
+          <h1 className="text-2xl font-bold text-[#e5e5e5] mb-4">
+            Acceso Denegado
+          </h1>
+          <p className="text-gray-400">
+            Debes iniciar sesión para ver tu perfil
+          </p>
         </div>
       </div>
     );
@@ -51,141 +142,354 @@ const PerfilCliente = () => {
   return (
     <div className="min-h-screen bg-[#0a0a0a] py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header del perfil */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#e5e5e5] mb-2">Mi Perfil</h1>
-          <p className="text-gray-400">Bienvenido, {user.name}</p>
-        </div>
-
-        {/* Información del usuario */}
-        <div className="bg-[#111111] rounded-lg shadow-md p-6 mb-6 border border-[#333]">
-          <h2 className="text-2xl font-bold text-[#e5e5e5] mb-4">Información Personal</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-gray-400"><strong>Nombre:</strong> <span className="text-[#e5e5e5]">{user.name}</span></p>
-              <p className="text-gray-400"><strong>Email:</strong> <span className="text-[#e5e5e5]">{user.email}</span></p>
-            </div>
-            <div>
-              <p className="text-gray-400"><strong>Documento:</strong> <span className="text-[#e5e5e5]">{user.documentType} {user.documentNumber}</span></p>
-              <p className="text-gray-400"><strong>Teléfono:</strong> <span className="text-[#e5e5e5]">{user.phone}</span></p>
-            </div>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-[#e5e5e5] mb-2">
+              Mi Perfil
+            </h1>
+            <p className="text-gray-400">Bienvenido, {user.name}</p>
           </div>
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+          >
+            Volver
+          </button>
         </div>
 
-        {/* Solicitudes */}
         <div className="bg-[#111111] rounded-lg shadow-md p-6 mb-6 border border-[#333]">
-          <h2 className="text-2xl font-bold text-[#e5e5e5] mb-4">Mis Solicitudes</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold text-[#e5e5e5]">
+              Información Personal
+            </h2>
+            {!isEditing && (
+              <button
+                onClick={handleEdit}
+                className="bg-[#ffcc00] text-black px-4 py-2 rounded-lg hover:bg-yellow-400 transition-colors"
+              >
+                Editar Perfil
+              </button>
+            )}
+          </div>
+
+          {isEditing ? (
+            <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-gray-400">Nombre:</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={userData.name}
+                    onChange={handleChange}
+                    className="w-full bg-[#1f1f1f] text-white p-2 rounded mt-1"
+                  />
+                   {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
+                </div>
+                <div>
+                  <label className="text-gray-400">Email:</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={userData.email}
+                    onChange={handleChange}
+                    className="w-full bg-[#1f1f1f] text-white p-2 rounded mt-1"
+                  />
+                   {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
+                </div>
+                <div>
+                  <label className="text-gray-400">Documento:</label>
+                  <div className="flex gap-2">
+                  <select
+                      name="documentType"
+                      value={userData.documentType}
+                      onChange={handleChange}
+                      className="w-1/3 bg-[#1f1f1f] text-white p-2 rounded mt-1"
+                    >
+                      <option value="">Seleccionar...</option>
+                      <option value="CC">Cédula de Ciudadanía</option>
+                      <option value="CE">Cédula de Extranjería</option>
+                      <option value="TI">Tarjeta de Identidad</option>
+                      <option value="PP">Pasaporte</option>
+                    </select>
+                    <input
+                      type="text"
+                      name="documentNumber"
+                      value={userData.documentNumber}
+                      onChange={handleChange}
+                      className="w-2/3 bg-[#1f1f1f] text-white p-2 rounded mt-1"
+                      placeholder="Número"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                  <div className="w-1/3">
+                  {errors.documentType && <p className="text-xs text-red-500">{errors.documentType}</p>}
+                  </div>
+                  <div className="w-2/3">
+                  {errors.documentNumber && <p className="text-xs text-red-500">{errors.documentNumber}</p>}
+                  </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-gray-400">Teléfono:</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={userData.phone}
+                    onChange={handleChange}
+                    className="w-full bg-[#1f1f1f] text-white p-2 rounded mt-1"
+                  />
+                  {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end gap-4">
+                <button
+                  onClick={handleCancel}
+                  className="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-500"
+                >
+                  Guardar Cambios
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-gray-400">
+                  <strong>Nombre:</strong>{" "}
+                  <span className="text-[#e5e5e5]">{user.name}</span>
+                </p>
+                <p className="text-gray-400">
+                  <strong>Email:</strong>{" "}
+                  <span className="text-[#e5e5e5]">{user.email}</span>
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-400">
+                  <strong>Documento:</strong>{" "}
+                  <span className="text-[#e5e5e5]">
+                    {user.documentType} {user.documentNumber}
+                  </span>
+                </p>
+                <p className="text-gray-400">
+                  <strong>Teléfono:</strong>{" "}
+                  <span className="text-[#e5e5e5]">{user.phone}</span>
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-[#111111] rounded-lg shadow-md p-6 mb-6 border border-[#333]">
+          <h2 className="text-2xl font-bold text-[#e5e5e5] mb-4">
+            Mis Solicitudes
+          </h2>
           {solicitudes.length === 0 ? (
             <p className="text-gray-400">No tienes solicitudes realizadas.</p>
           ) : (
             <div className="space-y-4">
               {solicitudes.map((solicitud) => (
-                <div key={solicitud.id} className="border border-[#333] rounded-lg p-4 bg-[#0f0f0f]">
+                <div
+                  key={solicitud.id}
+                  className="border border-[#333] rounded-lg p-4 bg-[#0f0f0f]"
+                >
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="font-semibold text-[#e5e5e5]">Solicitud #{solicitud.numeroPedido || solicitud.id.slice(-6)}</h3>
+                      <h3 className="font-semibold text-[#e5e5e5]">
+                        Solicitud #
+                        {solicitud.numeroPedido || solicitud.id.slice(-6)}
+                      </h3>
                       <p className="text-sm text-gray-400">
-                        {new Date(solicitud.fechaSolicitud || solicitud.createdAt).toLocaleDateString()}
+                        {new Date(
+                          solicitud.fechaSolicitud || solicitud.createdAt
+                        ).toLocaleDateString()}
                       </p>
                     </div>
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      solicitud.estado === 'pendiente' ? 'bg-yellow-900 text-yellow-200' :
-                      solicitud.estado === 'aprobada' ? 'bg-green-900 text-green-200' :
-                      solicitud.estado === 'en_camino' ? 'bg-blue-900 text-blue-200' :
-                      solicitud.estado === 'entregada' ? 'bg-purple-900 text-purple-200' :
-                      'bg-red-900 text-red-200'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        solicitud.estado === "pendiente"
+                          ? "bg-yellow-900 text-yellow-200"
+                          : solicitud.estado === "aprobada"
+                          ? "bg-green-900 text-green-200"
+                          : solicitud.estado === "en_camino"
+                          ? "bg-blue-900 text-blue-200"
+                          : solicitud.estado === "entregada"
+                          ? "bg-purple-900 text-purple-200"
+                          : "bg-red-900 text-red-200"
+                      }`}
+                    >
                       {solicitud.estado}
                     </span>
                   </div>
 
-                  {/* Información del Cliente */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-sm">
                     <div>
-                      <p className="text-gray-400"><strong>Cliente:</strong> <span className="text-[#e5e5e5]">{solicitud.nombreCompleto}</span></p>
-                      <p className="text-gray-400"><strong>Documento:</strong> <span className="text-[#e5e5e5]">{solicitud.documentoIdentificacion}</span></p>
-                      <p className="text-gray-400"><strong>Teléfono:</strong> <span className="text-[#e5e5e5]">{solicitud.telefonoContacto}</span></p>
+                      <p className="text-gray-400">
+                        <strong>Cliente:</strong>{" "}
+                        <span className="text-[#e5e5e5]">
+                          {solicitud.nombreCompleto}
+                        </span>
+                      </p>
+                      <p className="text-gray-400">
+                        <strong>Documento:</strong>{" "}
+                        <span className="text-[#e5e5e5]">
+                          {solicitud.documentoIdentificacion}
+                        </span>
+                      </p>
+                      <p className="text-gray-400">
+                        <strong>Teléfono:</strong>{" "}
+                        <span className="text-[#e5e5e5]">
+                          {solicitud.telefonoContacto}
+                        </span>
+                      </p>
                     </div>
                     <div>
-                      <p className="text-gray-400"><strong>Dirección:</strong> <span className="text-[#e5e5e5]">{solicitud.direccionEntrega}</span></p>
-                      <p className="text-gray-400"><strong>Método de Pago:</strong> <span className="text-[#e5e5e5]">{solicitud.metodoPago === 'contraEntrega' ? 'Contra Entrega' : solicitud.metodoPago}</span></p>
-                      <p className="text-gray-400"><strong>Tiempo Estimado:</strong> <span className="text-[#e5e5e5]">{solicitud.tiempoEstimadoEntrega || '24-48 horas'}</span></p>
+                      <p className="text-gray-400">
+                        <strong>Dirección:</strong>{" "}
+                        <span className="text-[#e5e5e5]">
+                          {solicitud.direccionEntrega}
+                        </span>
+                      </p>
+                      <p className="text-gray-400">
+                        <strong>Método de Pago:</strong>{" "}
+                        <span className="text-[#e5e5e5]">
+                          {solicitud.metodoPago === "contraEntrega"
+                            ? "Contra Entrega"
+                            : solicitud.metodoPago}
+                        </span>
+                      </p>
+                      <p className="text-gray-400">
+                        <strong>Tiempo Estimado:</strong>{" "}
+                        <span className="text-[#e5e5e5]">
+                          {solicitud.tiempoEstimadoEntrega || "24-48 horas"}
+                        </span>
+                      </p>
                     </div>
                   </div>
 
-                  {/* Información Adicional */}
-                  {(solicitud.referenciaDireccion || solicitud.horarioPreferido || solicitud.instruccionesEspeciales) && (
+                  {(solicitud.referenciaDireccion ||
+                    solicitud.horarioPreferido ||
+                    solicitud.instruccionesEspeciales ||
+                    (solicitud.estado === 'cancelada' && solicitud.motivoCancelacion)) && (
                     <div className="mb-4">
-                      <h4 className="font-semibold text-[#e5e5e5] mb-2">Información Adicional:</h4>
+                      <h4 className="font-semibold text-[#e5e5e5] mb-2">
+                        Información Adicional:
+                      </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         {solicitud.referenciaDireccion && (
-                          <p className="text-gray-400"><strong>Referencia:</strong> <span className="text-[#e5e5e5]">{solicitud.referenciaDireccion}</span></p>
+                          <p className="text-gray-400">
+                            <strong>Referencia:</strong>{" "}
+                            <span className="text-[#e5e5e5]">
+                              {solicitud.referenciaDireccion}
+                            </span>
+                          </p>
                         )}
                         {solicitud.horarioPreferido && (
-                          <p className="text-gray-400"><strong>Horario Preferido:</strong> <span className="text-[#e5e5e5]">
-                            {solicitud.horarioPreferido === 'manana' ? 'Mañana (8:00 AM - 12:00 PM)' :
-                             solicitud.horarioPreferido === 'tarde' ? 'Tarde (12:00 PM - 6:00 PM)' :
-                             solicitud.horarioPreferido === 'noche' ? 'Noche (6:00 PM - 9:00 PM)' :
-                             'Cualquier horario'}
-                          </span></p>
+                          <p className="text-gray-400">
+                            <strong>Horario Preferido:</strong>{" "}
+                            <span className="text-[#e5e5e5]">
+                              {solicitud.horarioPreferido === "manana"
+                                ? "Mañana (8:00 AM - 12:00 PM)"
+                                : solicitud.horarioPreferido === "tarde"
+                                ? "Tarde (12:00 PM - 6:00 PM)"
+                                : solicitud.horarioPreferido === "noche"
+                                ? "Noche (6:00 PM - 9:00 PM)"
+                                : "Cualquier horario"}
+                            </span>
+                          </p>
                         )}
                         {solicitud.instruccionesEspeciales && (
-                          <p className="text-gray-400"><strong>Instrucciones Especiales:</strong> <span className="text-[#e5e5e5]">{solicitud.instruccionesEspeciales}</span></p>
+                          <p className="text-gray-400">
+                            <strong>Instrucciones Especiales:</strong>{" "}
+                            <span className="text-[#e5e5e5]">
+                              {solicitud.instruccionesEspeciales}
+                            </span>
+                          </p>
+                        )}
+                        {solicitud.estado === 'cancelada' && solicitud.motivoCancelacion && (
+                          <p className="text-red-500">
+                            <strong>Motivo de Cancelación:</strong>{" "}
+                            {solicitud.motivoCancelacion}
+                          </p>
                         )}
                       </div>
                     </div>
                   )}
 
-                  {/* Productos con nueva estructura */}
                   <div className="mb-4">
-                    <h4 className="font-semibold text-[#e5e5e5] mb-2">Productos Solicitados:</h4>
+                    <h4 className="font-semibold text-[#e5e5e5] mb-2">
+                      Productos Solicitados:
+                    </h4>
                     <div className="space-y-2">
-                      {solicitud.detalles && solicitud.detalles.map((detalle, index) => (
-                        <div key={detalle.id} className="flex justify-between text-sm bg-[#1a1a1a] p-2 rounded border border-[#333]">
-                          <div className="flex items-center">
-                            <img
-                              src={detalle.imagenProducto || '/images/placeholder.png'}
-                              alt={detalle.nombreProducto}
-                              className="w-6 h-6 rounded object-cover mr-2"
-                            />
-                            <span className="text-[#e5e5e5]">{detalle.nombreProducto} x{detalle.cantidad}</span>
+                      {solicitud.detalles &&
+                        solicitud.detalles.map((detalle, index) => (
+                          <div
+                            key={detalle.id}
+                            className="flex justify-between text-sm bg-[#1a1a1a] p-2 rounded border border-[#333]"
+                          >
+                            <div className="flex items-center">
+                              <img
+                                src={
+                                  detalle.imagenProducto ||
+                                  "/images/placeholder.png"
+                                }
+                                alt={detalle.nombreProducto}
+                                className="w-6 h-6 rounded object-cover mr-2"
+                              />
+                              <span className="text-[#e5e5e5]">
+                                {detalle.nombreProducto} x{detalle.cantidad}
+                              </span>
+                            </div>
+                            <span className="text-[#ffcc00]">
+                              {formatCOPCustom(detalle.subtotal)}
+                            </span>
                           </div>
-                                                     <span className="text-[#ffcc00]">{formatCOPCustom(detalle.subtotal)}</span>
-                        </div>
-                      ))}
+                        ))}
                     </div>
                   </div>
 
-                  {/* Total */}
                   <div className="border-t border-[#333] pt-2">
                     <div className="flex justify-between font-semibold">
                       <span className="text-[#e5e5e5]">Total:</span>
-                                             <span className="text-[#ffcc00]">{formatCOPCustom(solicitud.total)}</span>
+                      <span className="text-[#ffcc00]">
+                        {formatCOPCustom(solicitud.total)}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Estado de la solicitud */}
-                  {solicitud.estado === 'aprobada' && solicitud.domiciliario && (
-                    <div className="mt-4 p-3 bg-green-900 bg-opacity-20 border border-green-700 rounded">
-                      <h5 className="font-semibold text-green-400 mb-2">Domiciliario Asignado:</h5>
-                      <p className="text-sm text-green-300">
-                        <strong>Nombre:</strong> {solicitud.domiciliario.nombre}
-                      </p>
-                      <p className="text-sm text-green-300">
-                        <strong>Teléfono:</strong> {solicitud.domiciliario.telefono}
-                      </p>
-                      <p className="text-sm text-green-300">
-                        <strong>Fecha de asignación:</strong> {new Date(solicitud.domiciliario.fechaAsignacion).toLocaleDateString()}
-                      </p>
-                    </div>
-                  )}
+                  {solicitud.estado === "aprobada" &&
+                    solicitud.domiciliario && (
+                      <div className="mt-4 p-3 bg-green-900 bg-opacity-20 border border-green-700 rounded">
+                        <h5 className="font-semibold text-green-400 mb-2">
+                          Domiciliario Asignado:
+                        </h5>
+                        <p className="text-sm text-green-300">
+                          <strong>Nombre:</strong>{" "}
+                          {solicitud.domiciliario.nombre}
+                        </p>
+                        <p className="text-sm text-green-300">
+                          <strong>Teléfono:</strong>{" "}
+                          {solicitud.domiciliario.telefono}
+                        </p>
+                        <p className="text-sm text-green-300">
+                          <strong>Fecha de asignación:</strong>{" "}
+                          {new Date(
+                            solicitud.domiciliario.fechaAsignacion
+                          ).toLocaleDateString()}
+                        </p>
+                      </div>
+                    )}
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Botón de actualizar */}
         <div className="text-center">
           <button
             onClick={cargarSolicitudes}
@@ -200,4 +504,3 @@ const PerfilCliente = () => {
 };
 
 export default PerfilCliente;
-

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-const UserForm = ({ user, onSave, onClose, mode }) => {
+const UserForm = ({ user, onSave, onClose, mode, isProfileEdit = false }) => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -62,7 +62,7 @@ const UserForm = ({ user, onSave, onClose, mode }) => {
         newErrors.confirmPassword = "Las contraseñas no coinciden.";
       }
     }
-    if (!formData.role) newErrors.role = "El rol es requerido.";
+    if (!formData.role && !isProfileEdit) newErrors.role = "El rol es requerido.";
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -188,80 +188,86 @@ const UserForm = ({ user, onSave, onClose, mode }) => {
         {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
       </div>
 
-      <div className="space-y-1">
-        <label htmlFor="password" className="text-sm font-medium text-gray-700">
-          {mode === 'edit' ? 'Nueva Contraseña (opcional)' : <>Contraseña <Required /></>}
-        </label>
-        <div className="relative">
-          <input
-            id="password"
-            name="password"
-            type={showPassword ? "text" : "password"}
-            value={formData.password}
-            onChange={handleChange}
-            placeholder={mode === 'edit' ? 'Dejar vacío para no cambiar' : ''}
-            disabled={isViewMode}
-            className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
-          />
-          {!isViewMode && (
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600"
-            >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
-            </button>
-          )}
-        </div>
-        {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
-      </div>
-
-      {(mode === 'create' || formData.password) && (
-        <div className="space-y-1">
-          <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
-            Confirmar Contraseña <Required />
-          </label>
-          <div className="relative">
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              disabled={isViewMode}
-              className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
-            />
-            {!isViewMode && (
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600"
-              >
-                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            )}
+      {!isProfileEdit && (
+        <>
+          <div className="space-y-1">
+            <label htmlFor="password" className="text-sm font-medium text-gray-700">
+              {mode === 'edit' ? 'Nueva Contraseña (opcional)' : <>Contraseña <Required /></>}
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={handleChange}
+                placeholder={mode === 'edit' ? 'Dejar vacío para no cambiar' : ''}
+                disabled={isViewMode}
+                className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+              />
+              {!isViewMode && (
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600"
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              )}
+            </div>
+            {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
           </div>
-          {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword}</p>}
-        </div>
+
+          {(mode === 'create' || formData.password) && (
+            <div className="space-y-1">
+              <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+                Confirmar Contraseña <Required />
+              </label>
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={isViewMode}
+                  className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                />
+                {!isViewMode && (
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600"
+                  >
+                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                )}
+              </div>
+              {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword}</p>}
+            </div>
+          )}
+        </>
       )}
 
-      <div className="space-y-1">
-        <label htmlFor="role" className="text-sm font-medium text-gray-700">
-          Rol <Required />
-        </label>
-        <select
-          id="role"
-          name="role"
-          value={formData.role}
-          onChange={handleChange}
-          disabled={isViewMode}
-          className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="Cliente">Cliente</option>
-          <option value="Administrador">Administrador</option>
-        </select>
-        {errors.role && <p className="text-xs text-red-500">{errors.role}</p>}
-      </div>
+      {!isProfileEdit && (
+        <div className="space-y-1">
+          <label htmlFor="role" className="text-sm font-medium text-gray-700">
+            Rol <Required />
+          </label>
+          <select
+            id="role"
+            name="role"
+            value={formData.role}
+            onChange={handleChange}
+            disabled={isViewMode}
+            className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="Cliente">Cliente</option>
+            <option value="Administrador">Administrador</option>
+          </select>
+          {errors.role && <p className="text-xs text-red-500">{errors.role}</p>}
+        </div>
+      )}
 
       <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
         <button

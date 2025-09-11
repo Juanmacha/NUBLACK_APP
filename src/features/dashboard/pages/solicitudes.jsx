@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, CheckCircle, XCircle, Clock, GeoAlt, Phone, Person } from 'react-bootstrap-icons';
+import { Eye, CheckCircle, XCircle, Clock, GeoAlt, Phone, Person, Download, CreditCard } from 'react-bootstrap-icons';
 import { formatCOPCustom } from '../../../shared/utils/currency';
- import CancelacionModal from "../components/CancelacionModal";
+import Swal from 'sweetalert2';
+import CancelacionModal from "../components/CancelacionModal";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const Solicitudes = () => {
   const [solicitudes, setSolicitudes] = useState([]);
@@ -13,6 +16,7 @@ const Solicitudes = () => {
   const [solicitudToCancel, setSolicitudToCancel] = useState(null);
   const [filtroEstado, setFiltroEstado] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [fechaFiltro, setFechaFiltro] = useState('');
 
   useEffect(() => {
     cargarDatos();
@@ -26,6 +30,11 @@ const Solicitudes = () => {
       setDetalles(detallesData);
     } catch (error) {
       console.error('Error al cargar datos:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al cargar datos',
+        text: 'Hubo un problema al cargar las solicitudes. Por favor, inténtalo de nuevo más tarde.',
+      });
     } finally {
       setLoading(false);
     }
@@ -57,6 +66,11 @@ const Solicitudes = () => {
       localStorage.setItem('nublack_solicitudes', JSON.stringify(solicitudesActualizadas));
     } catch (error) {
       console.error('Error al actualizar estado:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al actualizar estado',
+        text: 'Hubo un problema al actualizar el estado de la solicitud. Por favor, inténtalo de nuevo.',
+      });
     }
   };
 
@@ -73,7 +87,11 @@ const Solicitudes = () => {
     const matchSearch = !searchTerm ||
       solicitud.numeroPedido?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       solicitud.nombreCompleto?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchEstado && matchSearch;
+
+    const matchFecha = !fechaFiltro || 
+      new Date(solicitud.fechaSolicitud || solicitud.createdAt).toLocaleDateString('en-CA') === fechaFiltro;
+
+    return matchEstado && matchSearch && matchFecha;
   });
 
   const getEstadoColor = (estado) => {
@@ -102,6 +120,157 @@ const Solicitudes = () => {
     return detalles.filter(detalle => detalle.solicitudId === solicitudId);
   };
 
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF();
+    const today = new Date();
+    const formattedDate = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+
+    // Colores corporativos
+    const primaryColor = '#2c3e50'; // Azul oscuro
+    const secondaryColor = '#7f8c8d'; // Gris
+    const successColor = '#27ae60'; // Verde
+
+    doc.setFont('Helvetica');
+
+    // --- Encabezado ---
+    const addHeader = () => {
+      try {
+        const imgData = '/images/NBlogo.png'; // Ruta pública
+        doc.addImage(imgData, 'PNG', 15, 10, 40, 15);
+      } catch (e) {
+        console.error("No se pudo cargar el logo. Usando texto como placeholder.");
+        Swal.fire({
+          icon: 'warning',
+          title: 'Advertencia de PDF',
+          text: 'No se pudo cargar el logo para el PDF. Se usará texto como placeholder.',
+        });
+        doc.setFontSize(16);
+        doc.setTextColor(primaryColor);
+        doc.text("NUBACK", 15, 20);
+      }
+
+      // Título
+      doc.setFontSize(18);
+      doc.setFont('Helvetica', 'bold');
+      doc.setTextColor(primaryColor);
+      doc.text('Solicitudes Aprobadas', 200, 20, { align: 'right' });
+
+      // Fecha
+      doc.setFontSize(10);
+      doc.setFont('Helvetica', 'normal');
+      doc.setTextColor(secondaryColor);
+      doc.text(formattedDate, 200, 27, { align: 'right' });
+
+      // Línea divisoria
+      doc.setDrawColor(primaryColor);
+      doc.line(15, 35, 200, 35);
+    };
+
+    // --- Pie de página ---
+    const addFooter = () => {
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(secondaryColor);
+        doc.text(
+          `Documento generado automáticamente por NUBACK – Todos los derechos reservados.`,
+          105,
+          285,
+          { align: 'center' }
+        );
+        doc.text(`Página ${i} de ${pageCount}`, 200, 285, { align: 'right' });
+      }
+    };
+
+    // --- Contenido ---
+    addHeader();
+    let y = 50; // Posición inicial después del encabezado
+
+    const solicitudesAprobadas = solicitudesFiltradas.filter(s => s.estado === 'aprobada');
+
+    if (solicitudesAprobadas.length === 0) {
+      doc.setFontSize(12);
+      doc.setTextColor(secondaryColor);
+      doc.text("No hay solicitudes aprobadas para mostrar.", 105, 60, { align: 'center' });
+    }
+
+    solicitudesAprobadas.forEach((solicitud) => {
+      const detallesSolicitud = getDetallesSolicitud(solicitud.id);
+      const cardHeight = 20 + (detallesSolicitud.length * 10) + 50; // Altura estimada de la tarjeta
+
+      if (y + cardHeight > 270) { // Verificar si hay espacio en la página
+        addFooter();
+        doc.addPage();
+        addHeader();
+        y = 50;
+      }
+
+      // Contenedor de la tarjeta
+      doc.setDrawColor(secondaryColor);
+      doc.setLineWidth(0.2);
+      doc.roundedRect(15, y, 185, cardHeight, 3, 3, 'S');
+
+      // Número de Solicitud
+      doc.setFontSize(14);
+      doc.setFont('Helvetica', 'bold');
+      doc.setTextColor(primaryColor);
+      doc.text(`#${solicitud.numeroPedido || solicitud.id.slice(-6)}`, 20, y + 12);
+
+      // Información del Cliente
+      doc.setFontSize(10);
+      doc.setFont('Helvetica', 'bold');
+      doc.text('Información del Cliente:', 20, y + 25);
+      doc.setFont('Helvetica', 'normal');
+      doc.text(`- Nombre: ${solicitud.nombreCompleto}`, 22, y + 32);
+      doc.text(`- Teléfono: ${solicitud.telefonoContacto}`, 22, y + 39);
+      doc.text(`- Email: ${solicitud.correoElectronico}`, 22, y + 46);
+
+      // Información para el Domiciliario
+      doc.setFont('Helvetica', 'bold');
+      doc.text('Información para el Domiciliario:', 110, y + 25);
+      doc.setFont('Helvetica', 'normal');
+      doc.text(`- Dirección: ${solicitud.direccionEntrega}`, 112, y + 32);
+      doc.text(`- Método de Pago: ${solicitud.metodoPago === 'contraEntrega' ? 'Contra Entrega' : solicitud.metodoPago}`, 112, y + 39);
+      doc.text(`- Nº Solicitud: #${solicitud.numeroPedido || solicitud.id.slice(-6)}`, 112, y + 46);
+
+      // Productos Solicitados
+      autoTable(doc, {
+        startY: y + 55,
+        margin: { left: 20 },
+        tableWidth: 170,
+        head: [['Producto', 'Cantidad', 'Valor']],
+        body: detallesSolicitud.map(d => [d.nombreProducto, d.cantidad, formatCOPCustom(d.subtotal)]),
+        foot: [['', 'Total del Pedido:', formatCOPCustom(solicitud.total)]],
+        theme: 'grid',
+        headStyles: {
+          fillColor: [44, 62, 80], // primaryColor
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+        },
+        footStyles: {
+          fillColor: [236, 240, 241], // Un gris claro
+          textColor: [44, 62, 80], // primaryColor
+          fontStyle: 'bold',
+        },
+        styles: {
+          cellPadding: 2,
+          fontSize: 10,
+          valign: 'middle',
+          halign: 'left',
+        },
+        columnStyles: {
+          2: { halign: 'right' },
+        },
+      });
+
+      y += cardHeight + 10; // Espacio entre tarjetas
+    });
+
+    addFooter();
+    doc.save(`reporte_solicitudes_aprobadas_${formattedDate}.pdf`);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -117,13 +286,20 @@ const Solicitudes = () => {
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Solicitudes</h1>
           <p className="text-gray-500 mb-6">Administra y da seguimiento a las solicitudes de domicilio.</p>
         </div>
+        <button
+          onClick={handleDownloadPDF}
+          className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+        >
+          <Download />
+          Descargar PDF
+        </button>
       </div>
 
       {/* Filtros */}
       <div className="bg-white shadow rounded-lg p-6 mb-6">
         <h2 className="text-lg font-semibold mb-1">Filtros de Solicitudes</h2>
         <p className="text-sm text-gray-500 mb-4">Busca y filtra las solicitudes registradas</p>
-        <div className="flex flex-wrap gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="relative flex-1 min-w-[200px]">
             <svg className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -139,7 +315,7 @@ const Solicitudes = () => {
           <select
             value={filtroEstado}
             onChange={(e) => setFiltroEstado(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Todos los estados</option>
             <option value="pendiente">Pendiente</option>
@@ -148,6 +324,12 @@ const Solicitudes = () => {
             <option value="entregada">Entregada</option>
             <option value="cancelada">Cancelada</option>
           </select>
+          <input
+            type="date"
+            value={fechaFiltro}
+            onChange={(e) => setFechaFiltro(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
       </div>
 
@@ -156,6 +338,7 @@ const Solicitudes = () => {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Productos</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
@@ -165,15 +348,15 @@ const Solicitudes = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {solicitudesFiltradas.map((solicitud) => {
+            {solicitudesFiltradas.map((solicitud, index) => {
               const detallesSolicitud = getDetallesSolicitud(solicitud.id);
               return (
                 <tr key={solicitud.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">{solicitud.nombreCompleto}</div>
                       <div className="text-sm text-gray-500 flex items-center"><Phone className="w-3 h-3 mr-1" />{solicitud.telefonoContacto}</div>
-                      <div className="text-sm text-gray-500 flex items-center"><GeoAlt className="w-3 h-3 mr-1" />{solicitud.direccionEntrega?.substring(0, 30)}...</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap" title={detallesSolicitud.map(d => d.nombreProducto).join(', ')}>
@@ -223,60 +406,32 @@ const Solicitudes = () => {
               <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600"><XCircle className="w-6 h-6" /></button>
             </div>
             <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Información del Cliente */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">
-                    Información del Cliente
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center">
-                      <Person className="w-4 h-4 text-gray-500 mr-2" />
-                      <span className="text-gray-600">Nombre:</span>
-                      <span className="ml-2 font-medium">{selectedSolicitud.nombreCompleto}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="text-gray-600">Documento:</span>
-                      <span className="ml-2 font-medium">{selectedSolicitud.documentoIdentificacion}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Phone className="w-4 h-4 text-gray-500 mr-2" />
-                      <span className="text-gray-600">Teléfono:</span>
-                      <span className="ml-2 font-medium">{selectedSolicitud.telefonoContacto}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="text-gray-600">Email:</span>
-                      <span className="ml-2 font-medium">{selectedSolicitud.correoElectronico}</span>
-                    </div>
-                  </div>
+              {/* Información del Cliente */}
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">
+                  Información del Cliente
+                </h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <p><strong>Nombre:</strong> {selectedSolicitud.nombreCompleto}</p>
+                  <p><strong>Documento:</strong> {selectedSolicitud.documentoIdentificacion}</p>
+                  <p><strong>Teléfono:</strong> {selectedSolicitud.telefonoContacto}</p>
+                  <p><strong>Email:</strong> {selectedSolicitud.correoElectronico}</p>
                 </div>
+              </div>
 
-                {/* Información de Entrega */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">
-                    Información de Entrega
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex items-start">
-                      <GeoAlt className="w-4 h-4 text-gray-500 mr-2 mt-1" />
-                      <div>
-                        <span className="text-gray-600">Dirección:</span>
-                        <p className="ml-2 font-medium">{selectedSolicitud.direccionEntrega}</p>
-                      </div>
-                    </div>
+              <hr className="my-6" />
+
+              {/* Información de Entrega */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">
+                  Información de Entrega
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <p><strong>Dirección:</strong> {selectedSolicitud.direccionEntrega}</p>
                     {selectedSolicitud.indicacionesAdicionales && (
-                      <div>
-                        <span className="text-gray-600">Indicaciones:</span>
-                        <p className="ml-2 font-medium">{selectedSolicitud.indicacionesAdicionales}</p>
-                      </div>
+                        <p><strong>Indicaciones:</strong> {selectedSolicitud.indicacionesAdicionales}</p>
                     )}
-                    <div>
-                      <span className="text-gray-600">Método de Pago:</span>
-                      <span className="ml-2 font-medium">
-                        {selectedSolicitud.metodoPago === 'contraEntrega' ? 'Contra Entrega' : selectedSolicitud.metodoPago}
-                      </span>
-                    </div>
-                  </div>
+                    <p><strong>Método de Pago:</strong> {selectedSolicitud.metodoPago === 'contraEntrega' ? 'Contra Entrega' : selectedSolicitud.metodoPago}</p>
                 </div>
               </div>
 
@@ -299,14 +454,14 @@ const Solicitudes = () => {
                           <span className="text-gray-500 ml-2">x{detalle.cantidad}</span>
                         </div>
                       </div>
-                                             <span className="font-semibold">{formatCOPCustom(detalle.subtotal)}</span>
+                      <span className="font-semibold">{formatCOPCustom(detalle.subtotal)}</span>
                     </div>
                   ))}
                   <div className="flex justify-between items-center pt-2 mt-2 border-t border-gray-300">
                     <span className="text-lg font-bold">Total:</span>
-                                                              <span className="text-lg font-bold text-green-600">
-                        {formatCOPCustom(selectedSolicitud.total)}
-                      </span>
+                    <span className="text-lg font-bold text-green-600">
+                      {formatCOPCustom(selectedSolicitud.total)}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -314,8 +469,15 @@ const Solicitudes = () => {
               {/* Información para Domiciliario */}
               <div className="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
                 <h4 className="font-semibold text-blue-900 mb-2">Información para Domiciliario:</h4>
+                {selectedSolicitud.estado === 'cancelada' && selectedSolicitud.motivoCancelacion && (
+                  <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                    <h5 className="font-bold">Motivo de Cancelación</h5>
+                    <p>{selectedSolicitud.motivoCancelacion}</p>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
+                    <p><strong>Nº Solicitud:</strong> {selectedSolicitud.numeroPedido || selectedSolicitud.id.slice(-6)}</p>
                     <p><strong>Cliente:</strong> {selectedSolicitud.nombreCompleto}</p>
                     <p><strong>Teléfono:</strong> {selectedSolicitud.telefonoContacto}</p>
                     <p><strong>Dirección:</strong> {selectedSolicitud.direccionEntrega}</p>
@@ -324,7 +486,7 @@ const Solicitudes = () => {
                     )}
                   </div>
                   <div>
-                                         <p><strong>Monto a cobrar:</strong> {formatCOPCustom(selectedSolicitud.total)}</p>
+                    <p><strong>Monto a cobrar:</strong> {formatCOPCustom(selectedSolicitud.total)}</p>
                     <p><strong>Forma de pago:</strong> {selectedSolicitud.metodoPago === 'contraEntrega' ? 'Contra Entrega' : selectedSolicitud.metodoPago}</p>
                     <p><strong>Estado actual:</strong> <span className="capitalize">{selectedSolicitud.estado?.replace('_', ' ')}</span></p>
                     {selectedSolicitud.horarioPreferido && (

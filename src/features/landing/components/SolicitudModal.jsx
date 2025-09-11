@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { X } from "react-bootstrap-icons";
 import { formatCOPCustom } from "../../../shared/utils/currency";
 
-const SolicitudModal = ({ isOpen, onClose, onConfirm, cart, subtotal }) => {
+const SolicitudModal = ({ isOpen, onClose, onConfirm, cart, subtotal, user }) => {
   const [formData, setFormData] = useState({
-    nombreCompleto: "",
-    documentoIdentificacion: "",
-    telefonoContacto: "",
-    correoElectronico: "",
+    firstName: "",
+    lastName: "",
+    documentType: "",
+    documentNumber: "",
+    phone: "",
+    email: "",
     direccionEntrega: "",
     referenciaDireccion: "",
     metodoPago: "contraEntrega",
@@ -15,15 +17,29 @@ const SolicitudModal = ({ isOpen, onClose, onConfirm, cart, subtotal }) => {
 
   useEffect(() => {
     if (isOpen) {
-      // Generar número de pedido único
       const numeroPedido = `PED-${Date.now().toString(36).toUpperCase()}`;
-      setFormData(prev => ({
-        ...prev,
-        numeroPedido,
-        fechaSolicitud: new Date().toISOString()
-      }));
+      if (user) {
+        const nameParts = user.name ? user.name.split(' ') : [''];
+        const firstName = nameParts[0];
+        const lastName = nameParts.slice(1).join(' ');
+
+        setFormData(prev => ({
+          ...prev,
+          ...user,
+          firstName: firstName || '',
+          lastName: lastName || '',
+          numeroPedido,
+          fechaSolicitud: new Date().toISOString()
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          numeroPedido,
+          fechaSolicitud: new Date().toISOString()
+        }));
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, user]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -36,34 +52,33 @@ const SolicitudModal = ({ isOpen, onClose, onConfirm, cart, subtotal }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Validar campos obligatorios
-    if (!formData.nombreCompleto || !formData.telefonoContacto || !formData.direccionEntrega) {
+    if (!formData.firstName || !formData.lastName || !formData.phone || !formData.direccionEntrega || !formData.referenciaDireccion) {
       alert("Por favor completa todos los campos obligatorios");
       return;
     }
 
-    // Crear objeto de solicitud con nueva estructura
     const solicitudData = {
+      ...formData,
+      nombreCompleto: `${formData.firstName} ${formData.lastName}`,
+      telefonoContacto: formData.phone,
+      documentoIdentificacion: `${formData.documentType} ${formData.documentNumber}`,
+      correoElectronico: formData.email,
       numeroPedido: formData.numeroPedido,
       fechaSolicitud: formData.fechaSolicitud,
       productos: cart,
       subtotal: subtotal,
+      total: subtotal, // Asumiendo que el total es igual al subtotal por ahora
       tiempoEstimadoEntrega: "24-48 horas",
       prioridad: "normal",
-      notasInternas: `Cliente: ${formData.nombreCompleto} | Tel: ${formData.telefonoContacto} | Dirección: ${formData.direccionEntrega}`,
-      nombreCompleto: formData.nombreCompleto,
-      documentoIdentificacion: formData.documentoIdentificacion,
-      telefonoContacto: formData.telefonoContacto,
-      correoElectronico: formData.correoElectronico,
-      direccionEntrega: formData.direccionEntrega,
-      referenciaDireccion: formData.referenciaDireccion,
-      metodoPago: formData.metodoPago,
+      notasInternas: `Cliente: ${formData.firstName} ${formData.lastName} | Tel: ${formData.phone} | Dirección: ${formData.direccionEntrega}`,
     };
 
     onConfirm(solicitudData);
   };
 
   if (!isOpen) return null;
+
+  const Required = () => <span className="text-red-500">*</span>;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
@@ -90,56 +105,85 @@ const SolicitudModal = ({ isOpen, onClose, onConfirm, cart, subtotal }) => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">
-                    Nombre Completo *
+                    Primer Nombre <Required />
                   </label>
                   <input
                     type="text"
-                    name="nombreCompleto"
-                    value={formData.nombreCompleto}
+                    name="firstName"
+                    value={formData.firstName}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#333] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4B1E1E]"
                     required
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">
-                    Documento de Identificación
+                    Primer Apellido <Required />
                   </label>
                   <input
                     type="text"
-                    name="documentoIdentificacion"
-                    value={formData.documentoIdentificacion}
+                    name="lastName"
+                    value={formData.lastName}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#333] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4B1E1E]"
-                    placeholder="DNI, Pasaporte, etc."
+                    required
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">
-                    Teléfono de Contacto *
+                    Tipo de Documento <Required />
+                  </label>
+                  <select
+                    name="documentType"
+                    value={formData.documentType}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#333] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4B1E1E]"
+                    required
+                  >
+                    <option value="">Seleccionar...</option>
+                    <option value="CC">Cédula de Ciudadanía</option>
+                    <option value="CE">Cédula de Extranjería</option>
+                    <option value="TI">Tarjeta de Identidad</option>
+                    <option value="PP">Pasaporte</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                    Número de Documento <Required />
+                  </label>
+                  <input
+                    type="text"
+                    name="documentNumber"
+                    value={formData.documentNumber}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#333] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4B1E1E]"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                    Teléfono de Contacto <Required />
                   </label>
                   <input
                     type="tel"
-                    name="telefonoContacto"
-                    value={formData.telefonoContacto}
+                    name="phone"
+                    value={formData.phone}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#333] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4B1E1E]"
                     required
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">
-                    Correo Electrónico
+                    Correo Electrónico <Required />
                   </label>
                   <input
                     type="email"
-                    name="correoElectronico"
-                    value={formData.correoElectronico}
+                    name="email"
+                    value={formData.email}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#333] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4B1E1E]"
+                    required
                   />
                 </div>
               </div>
@@ -153,7 +197,7 @@ const SolicitudModal = ({ isOpen, onClose, onConfirm, cart, subtotal }) => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">
-                    Dirección de Entrega *
+                    Dirección de Entrega <Required />
                   </label>
                   <textarea
                     name="direccionEntrega"
@@ -161,14 +205,12 @@ const SolicitudModal = ({ isOpen, onClose, onConfirm, cart, subtotal }) => {
                     onChange={handleInputChange}
                     rows="3"
                     className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#333] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4B1E1E]"
-                    placeholder="Calle, número, piso, código postal, ciudad"
                     required
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">
-                    Referencia de Dirección
+                    Referencia de Dirección <Required />
                   </label>
                   <input
                     type="text"
@@ -176,11 +218,10 @@ const SolicitudModal = ({ isOpen, onClose, onConfirm, cart, subtotal }) => {
                     value={formData.referenciaDireccion}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#333] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4B1E1E]"
-                    placeholder="Cerca al parque, frente al banco, etc."
+                    required
                   />
                 </div>
-
-                </div>
+              </div>
             </div>
 
             {/* Preferencias y Método de Pago */}
@@ -201,7 +242,6 @@ const SolicitudModal = ({ isOpen, onClose, onConfirm, cart, subtotal }) => {
                   >
                     <option value="contraEntrega">Contra Entrega</option>
                     <option value="transferencia">Transferencia Bancaria</option>
-                    <option value="tarjeta">Tarjeta de Crédito/Débito</option>
                   </select>
                 </div>
               </div>
@@ -220,9 +260,9 @@ const SolicitudModal = ({ isOpen, onClose, onConfirm, cart, subtotal }) => {
                     <span className="text-gray-400">
                       {item.nombre} x{item.quantity}
                     </span>
-                                      <span className="font-semibold">
-                    {formatCOPCustom(item.precio * item.quantity)}
-                  </span>
+                    <span className="font-semibold">
+                      {formatCOPCustom(item.precio * item.quantity)}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -240,9 +280,9 @@ const SolicitudModal = ({ isOpen, onClose, onConfirm, cart, subtotal }) => {
             <h4 className="font-semibold text-[#e5e5e5] mb-2">Información para Domiciliario:</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <p><strong>Cliente:</strong> {formData.nombreCompleto || 'Por completar'}</p>
-                <p><strong>Teléfono:</strong> {formData.telefonoContacto || 'Por completar'}</p>
-                <p><strong>Dirección:</strong> {formData.direccionEntrega || 'Por completar'}</p>
+                <p><strong>Cliente:</strong> {formData.firstName} {formData.lastName}</p>
+                <p><strong>Teléfono:</strong> {formData.phone}</p>
+                <p><strong>Dirección:</strong> {formData.direccionEntrega}</p>
                 {formData.referenciaDireccion && (
                   <p><strong>Referencia:</strong> {formData.referenciaDireccion}</p>
                 )}

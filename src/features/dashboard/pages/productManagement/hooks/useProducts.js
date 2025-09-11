@@ -129,8 +129,8 @@ export const useProducts = () => {
     return products.find(product => product.id === id);
   }, [products]);
 
-  const getProductsByCategory = useCallback((categoryId) => {
-    return products.filter(product => product.categoriaId === categoryId);
+  const getProductsByCategory = useCallback((categoryName) => {
+    return products.filter(product => product.categoria === categoryName);
   }, [products]);
 
   const getActiveProducts = useCallback(() => {

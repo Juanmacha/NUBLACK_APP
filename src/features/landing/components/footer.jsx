@@ -1,5 +1,4 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import logo from  "/images/NBlogo.png";
 
 function Footer() {
   return (
@@ -9,7 +8,7 @@ function Footer() {
         {/* Logo y redes sooociales */}
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <img src={logo} alt="Logo" className="w-10 h-10" />
+            <img src="/images/NBlogo.png" alt="Logo" className="w-10 h-10" />
             <h2 className="text-lg font-bold">NUBLACK</h2>
           </div>
           <p className="text-sm text-gray-300">

@@ -3,7 +3,7 @@ import React from "react";
 import UserForm from "./UserForm";
 import { User } from "lucide-react";
 
-const UserModal = ({ user, onClose, onSave, mode }) => {
+const UserModal = ({ user, onClose, onSave, mode, isProfileEdit = false }) => {
   const title = {
     create: "Crear Nuevo Usuario",
     edit: "Editar Usuario",
@@ -19,7 +19,7 @@ const UserModal = ({ user, onClose, onSave, mode }) => {
             {title}
           </h3>
         </div>
-        <UserForm user={user} onSave={onSave} onClose={onClose} mode={mode} />
+        <UserForm user={user} onSave={onSave} onClose={onClose} mode={mode} isProfileEdit={isProfileEdit} />
       </div>
     </div>
   );

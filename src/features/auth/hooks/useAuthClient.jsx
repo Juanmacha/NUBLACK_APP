@@ -92,6 +92,11 @@ const authReducer = (state, action) => {
         token: action.payload.token, 
         loading: false 
       };
+    case 'UPDATE_USER_SUCCESS':
+      return {
+        ...state,
+        user: action.payload.user,
+      };
     default:
       return state;
   }
@@ -225,6 +230,32 @@ function useAuthClientLogic() {
     dispatch({ type: 'LOGOUT' });
   }, []);
 
+  const updateUser = useCallback(async (userData) => {
+    try {
+      const clients = loadClients();
+      const clientIndex = clients.findIndex(c => c.email === state.user.email);
+
+      if (clientIndex === -1) {
+        throw new Error("Usuario no encontrado");
+      }
+
+      const updatedClient = { ...clients[clientIndex], ...userData };
+      clients[clientIndex] = updatedClient;
+      saveClients(clients);
+
+      const session = loadSession();
+      if (session) {
+        session.user = { ...session.user, ...userData };
+        saveSession(session);
+        dispatch({ type: 'UPDATE_USER_SUCCESS', payload: { user: session.user } });
+      }
+
+    } catch (err) {
+      console.error("Error updating user:", err);
+      throw err;
+    }
+  }, [state.user]);
+
   const value = {
     user: state.user,
     token: state.token,
@@ -233,6 +264,7 @@ function useAuthClientLogic() {
     login,
     register,
     logout,
+    updateUser,
   };
 
   return value;

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthClient } from "../hooks/useAuthClient.jsx";
-import NBlogo from ".//..//..//..//../public/images/NBlogo.png";
 
 const RegistroCliente = () => {
   const [formData, setFormData] = useState({
@@ -45,7 +44,7 @@ const RegistroCliente = () => {
 
     try {
       await register(formData);
-      navigate("/");
+      navigate("/login");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -60,7 +59,7 @@ const RegistroCliente = () => {
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-28 h-28 mb-4">
             <img
-              src={NBlogo}
+              src="/images/NBlogo.png"
               alt="NUBLACK Logo"
               className="w-full h-full object-contain rounded-full"
             />

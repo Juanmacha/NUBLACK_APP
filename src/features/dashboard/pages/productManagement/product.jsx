@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import ProductTable from "./components/productTable";
 import { useProducts } from "./hooks/useProducts";
 import { useCategories } from "../categoryManagement/hooks/useCategories";
+import Swal from 'sweetalert2';
 
 // Modales
 import VerProductoModal from "./components/seeProduct";
 import EditarProductoModal from "./components/editProduct";
-import EliminarProductoModal from "./components/deleteProduct";
+
 import CrearProductoModal from "./components/productCreate";
-import ConfirmationReasonModal from "../../components/ConfirmationReasonModal";
 
 function Product() {
   const [busqueda, setBusqueda] = useState("");
@@ -21,8 +21,6 @@ function Product() {
   const [modalEditar, setModalEditar] = useState(null);
   const [modalEliminar, setModalEliminar] = useState(null);
   const [modalCrear, setModalCrear] = useState(false);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [productToDelete, setProductToDelete] = useState(null);
 
   // Filtro de productos
   const productosFiltrados = products.filter((prod) => {
@@ -38,8 +36,51 @@ function Product() {
     return matchBusqueda && matchCategoria;
   });
 
-  const handleCrearProducto = (nuevoProducto) => {
-    createProduct(nuevoProducto);
+  const handleCrearProducto = async (nuevoProducto) => {
+    try {
+      await createProduct(nuevoProducto);
+      Swal.fire(
+        '¡Creado!',
+        'El producto ha sido creado exitosamente.',
+        'success'
+      );
+    } catch (error) {
+      Swal.fire(
+        'Error',
+        error.message || 'Hubo un problema al crear el producto.',
+        'error'
+      );
+    }
+  };
+
+  const handleDeleteProduct = (id) => {
+    Swal.fire({
+      title: 'Confirmar Eliminación de Producto',
+      text: `¿Estás seguro de que deseas eliminar el producto con ID: ${id}? Esta acción es irreversible.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await deleteProduct(id);
+          Swal.fire(
+            '¡Eliminado!',
+            'El producto ha sido eliminado.',
+            'success'
+          );
+        } catch (error) {
+          Swal.fire(
+            'Error',
+            error.message,
+            'error'
+          );
+        }
+      }
+    });
   };
 
   return (
@@ -95,10 +136,7 @@ function Product() {
         products={productosFiltrados}
         onVer={(prod) => setModalVer(prod)}
         onEditar={(prod) => setModalEditar(prod)}
-        onEliminar={(id) => {
-          setProductToDelete(id);
-          setShowDeleteConfirmation(true);
-        }}
+        onEliminar={(id) => handleDeleteProduct(id)}
       />
 
       {/* Modales */}
@@ -107,22 +145,26 @@ function Product() {
         <EditarProductoModal
           producto={modalEditar}
           onClose={() => setModalEditar(null)}
-          onGuardar={(data) => {
-            updateProduct(data.id, data);
-            setModalEditar(null);
+          onGuardar={async (data) => {
+            try {
+              await updateProduct(data.id, data);
+              Swal.fire(
+                '¡Actualizado!',
+                'El producto ha sido actualizado exitosamente.',
+                'success'
+              );
+              setModalEditar(null);
+            } catch (error) {
+              Swal.fire(
+                'Error',
+                error.message || 'Hubo un problema al actualizar el producto.',
+                'error'
+              );
+            }
           }}
         />
       )}
-      {modalEliminar && (
-        <EliminarProductoModal
-          producto={modalEliminar}
-          onClose={() => setModalEliminar(null)}
-          onEliminar={(id) => {
-            deleteProduct(id);
-            setModalEliminar(null);
-          }}
-        />
-      )}
+      
       {modalCrear && (
         <CrearProductoModal 
           onClose={() => setModalCrear(false)} 
@@ -132,19 +174,6 @@ function Product() {
           }} 
         />
       )}
-
-      <ConfirmationReasonModal
-        show={showDeleteConfirmation}
-        onClose={() => setShowDeleteConfirmation(false)}
-        onConfirm={(reason) => {
-          deleteProduct(productToDelete, reason);
-          setShowDeleteConfirmation(false);
-          setProductToDelete(null);
-        }}
-        title="Confirmar Eliminación de Producto"
-        message={`¿Estás seguro de que deseas eliminar el producto con ID: ${productToDelete}? Esta acción es irreversible.`}
-        placeholder="Escribe el motivo de la eliminación..."
-      />
     </div>
   );
 }
