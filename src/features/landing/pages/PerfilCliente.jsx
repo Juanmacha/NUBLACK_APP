@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthClient } from "../../auth/hooks/useAuthClient.jsx";
 import { useOrders } from "../hooks/useOrders";
@@ -7,10 +7,11 @@ import Swal from 'sweetalert2';
 
 const PerfilCliente = () => {
   const { user, updateUser } = useAuthClient();
-  const { getSolicitudesCompletas } = useOrders();
+  const { getSolicitudesCompletas, cancelarSolicitud } = useOrders();
   const [solicitudes, setSolicitudes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [periodo, setPeriodo] = useState("mes_actual");
   const [userData, setUserData] = useState({
     name: "",
     email: "",
@@ -20,6 +21,59 @@ const PerfilCliente = () => {
   });
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+
+  const filtrarSolicitudesPorPeriodo = (solicitudes, periodo) => {
+    const ahora = new Date();
+    const mesActual = ahora.getMonth();
+    const anoActual = ahora.getFullYear();
+
+    switch (periodo) {
+      case "mes_actual":
+        return solicitudes.filter((s) => {
+          const fechaSolicitud = new Date(s.fechaSolicitud || s.createdAt);
+          return (
+            fechaSolicitud.getMonth() === mesActual &&
+            fechaSolicitud.getFullYear() === anoActual
+          );
+        });
+      case "dos_meses": {
+        const haceDosMeses = new Date(anoActual, mesActual - 2, 1);
+        return solicitudes.filter(
+          (s) => new Date(s.fechaSolicitud || s.createdAt) >= haceDosMeses
+        );
+      }
+      case "seis_meses": {
+        const haceSeisMeses = new Date(anoActual, mesActual - 6, 1);
+        return solicitudes.filter(
+          (s) => new Date(s.fechaSolicitud || s.createdAt) >= haceSeisMeses
+        );
+      }
+      case "todas":
+      default:
+        return solicitudes;
+    }
+  };
+
+  const cargarSolicitudes = useCallback(() => {
+    setLoading(true);
+    try {
+      const solicitudesCompletas = getSolicitudesCompletas();
+      const solicitudesFiltradas = filtrarSolicitudesPorPeriodo(
+        solicitudesCompletas,
+        periodo
+      );
+      setSolicitudes(solicitudesFiltradas);
+    } catch (error) {
+      console.error("Error al cargar solicitudes:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error al cargar solicitudes",
+        text: "Hubo un problema al cargar tus solicitudes. Por favor, inténtalo de nuevo más tarde.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [getSolicitudesCompletas, periodo]);
 
   useEffect(() => {
     if (user) {
@@ -32,21 +86,34 @@ const PerfilCliente = () => {
         phone: user.phone || "",
       });
     }
-  }, [user]);
+  }, [user, cargarSolicitudes]);
 
-  const cargarSolicitudes = () => {
-    try {
-      const solicitudesCompletas = getSolicitudesCompletas();
-      setSolicitudes(solicitudesCompletas);
-    } catch (error) {
-      console.error("Error al cargar solicitudes:", error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error al cargar solicitudes',
-        text: 'Hubo un problema al cargar tus solicitudes. Por favor, inténtalo de nuevo más tarde.',
-      });
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (user) {
+      cargarSolicitudes();
+    }
+  }, [periodo, user, cargarSolicitudes]);
+
+  const handleCancelarSolicitud = async (solicitudId) => {
+    const { value: motivo } = await Swal.fire({
+      title: 'Cancelar Solicitud',
+      input: 'textarea',
+      inputLabel: 'Motivo de la cancelación',
+      inputPlaceholder: 'Escribe aquí el motivo por el cual cancelas la solicitud...',
+      showCancelButton: true,
+      confirmButtonText: 'Confirmar Cancelación',
+      cancelButtonText: 'Cerrar',
+      inputValidator: (value) => {
+        if (!value) {
+          return '¡Necesitas escribir un motivo!'
+        }
+      }
+    });
+
+    if (motivo) {
+      cancelarSolicitud(solicitudId, motivo);
+      cargarSolicitudes(); 
+      Swal.fire('¡Cancelada!', 'La solicitud ha sido cancelada.', 'success');
     }
   };
 
@@ -286,9 +353,21 @@ const PerfilCliente = () => {
         </div>
 
         <div className="bg-[#111111] rounded-lg shadow-md p-6 mb-6 border border-[#333]">
-          <h2 className="text-2xl font-bold text-[#e5e5e5] mb-4">
-            Mis Solicitudes
-          </h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold text-[#e5e5e5]">
+              Mis Solicitudes
+            </h2>
+            <select
+              value={periodo}
+              onChange={(e) => setPeriodo(e.target.value)}
+              className="bg-[#1f1f1f] text-white p-2 rounded-lg border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#ffcc00]"
+            >
+              <option value="mes_actual">Este mes</option>
+              <option value="dos_meses">Últimos 2 meses</option>
+              <option value="seis_meses">Últimos 6 meses</option>
+              <option value="todas">Todas</option>
+            </select>
+          </div>
           {solicitudes.length === 0 ? (
             <p className="text-gray-400">No tienes solicitudes realizadas.</p>
           ) : (
@@ -427,7 +506,7 @@ const PerfilCliente = () => {
                     </h4>
                     <div className="space-y-2">
                       {solicitud.detalles &&
-                        solicitud.detalles.map((detalle, index) => (
+                        solicitud.detalles.map((detalle) => (
                           <div
                             key={detalle.id}
                             className="flex justify-between text-sm bg-[#1a1a1a] p-2 rounded border border-[#333]"
@@ -442,7 +521,8 @@ const PerfilCliente = () => {
                                 className="w-6 h-6 rounded object-cover mr-2"
                               />
                               <span className="text-[#e5e5e5]">
-                                {detalle.nombreProducto} x{detalle.cantidad}
+                                {detalle.nombreProducto}
+                                {detalle.size && ` (Talla: ${detalle.size})`} x{detalle.cantidad}
                               </span>
                             </div>
                             <span className="text-[#ffcc00]">
@@ -484,6 +564,17 @@ const PerfilCliente = () => {
                         </p>
                       </div>
                     )}
+
+                  {['pendiente', 'aprobada'].includes(solicitud.estado) && (
+                    <div className="mt-4 text-right">
+                      <button
+                        onClick={() => handleCancelarSolicitud(solicitud.id)}
+                        className="bg-red-800 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                      >
+                        Cancelar Solicitud
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

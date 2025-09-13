@@ -1,7 +1,7 @@
 import React from 'react';
-import { Eye, PencilSquare, Trash } from 'react-bootstrap-icons';
+import { Eye, PencilSquare } from 'react-bootstrap-icons';
 
-const CategoryTable = ({ categorias, onVer, onEditar, onEliminar }) => {
+const CategoryTable = ({ categorias, onVer, onEditar, onToggleStatus }) => {
   return (
     <div className="bg-white shadow-md rounded-lg overflow-hidden">
       <table className="min-w-full divide-y divide-gray-200">
@@ -35,11 +35,14 @@ const CategoryTable = ({ categorias, onVer, onEditar, onEliminar }) => {
                 {category.descripcion}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                  category.estado === 'Activo' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
+                <span 
+                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full cursor-pointer ${
+                    category.estado === 'Activo' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}
+                  onClick={() => onToggleStatus(category.id, category.estado === 'Activo' ? 'Inactivo' : 'Activo')}
+                >
                   {category.estado}
                 </span>
               </td>
@@ -58,13 +61,6 @@ const CategoryTable = ({ categorias, onVer, onEditar, onEliminar }) => {
                     title="Editar"
                   >
                     <PencilSquare className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => onEliminar(category.id)}
-                    className="text-red-600 hover:text-red-900"
-                    title="Eliminar"
-                  >
-                    <Trash className="w-4 h-4" />
                   </button>
                 </div>
               </td>

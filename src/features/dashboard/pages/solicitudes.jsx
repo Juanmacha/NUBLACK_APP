@@ -18,6 +18,10 @@ const Solicitudes = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [fechaFiltro, setFechaFiltro] = useState('');
 
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(4); // 4 elementos por página
+
   useEffect(() => {
     cargarDatos();
   }, []);
@@ -82,6 +86,28 @@ const Solicitudes = () => {
     }
   };
 
+  const confirmarActualizarEstado = (solicitudId, nuevoEstado) => {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: `¿Deseas cambiar el estado de la solicitud a "${nuevoEstado.replace('_', ' ')}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, cambiar estado',
+      cancelButtonText: 'No, cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        actualizarEstado(solicitudId, nuevoEstado);
+        Swal.fire(
+          '¡Actualizado!',
+          'El estado de la solicitud ha sido actualizado.',
+          'success'
+        )
+      }
+    })
+  };
+
   const solicitudesFiltradas = solicitudes.filter(solicitud => {
     const matchEstado = !filtroEstado || solicitud.estado === filtroEstado;
     const matchSearch = !searchTerm ||
@@ -93,6 +119,19 @@ const Solicitudes = () => {
 
     return matchEstado && matchSearch && matchFecha;
   });
+
+  // Lógica de paginación
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = solicitudesFiltradas.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(solicitudesFiltradas.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Reiniciar a la primera página cuando los filtros cambian
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filtroEstado, searchTerm, fechaFiltro]);
 
   const getEstadoColor = (estado) => {
     switch (estado) {
@@ -348,11 +387,11 @@ const Solicitudes = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {solicitudesFiltradas.map((solicitud, index) => {
+            {currentItems.map((solicitud, index) => {
               const detallesSolicitud = getDetallesSolicitud(solicitud.id);
               return (
                 <tr key={solicitud.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{indexOfFirstItem + index + 1}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">{solicitud.nombreCompleto}</div>
@@ -381,12 +420,12 @@ const Solicitudes = () => {
                       <button onClick={() => { setSelectedSolicitud(solicitud); setShowModal(true); }} className="text-blue-600 hover:text-blue-900" title="Ver detalles"><Eye className="w-4 h-4" /></button>
                       {solicitud.estado === 'pendiente' && (
                         <>
-                          <button onClick={() => actualizarEstado(solicitud.id, 'aprobada')} className="text-green-600 hover:text-green-900" title="Aprobar"><CheckCircle className="w-4 h-4" /></button>
+                          <button onClick={() => confirmarActualizarEstado(solicitud.id, 'aprobada')} className="text-green-600 hover:text-green-900" title="Aprobar"><CheckCircle className="w-4 h-4" /></button>
                           <button onClick={() => { setSolicitudToCancel(solicitud); setShowCancelModal(true); }} className="text-red-600 hover:text-red-900" title="Cancelar"><XCircle className="w-4 h-4" /></button>
                         </>
                       )}
-                      {solicitud.estado === 'aprobada' && (<button onClick={() => actualizarEstado(solicitud.id, 'en_camino')} className="text-blue-600 hover:text-blue-900" title="Marcar en camino"><GeoAlt className="w-4 h-4" /></button>)}
-                      {solicitud.estado === 'en_camino' && (<button onClick={() => actualizarEstado(solicitud.id, 'entregada')} className="text-purple-600 hover:text-purple-900" title="Marcar entregada"><CheckCircle className="w-4 h-4" /></button>)}
+                      {solicitud.estado === 'aprobada' && (<button onClick={() => confirmarActualizarEstado(solicitud.id, 'en_camino')} className="text-blue-600 hover:text-blue-900" title="Marcar en camino"><GeoAlt className="w-4 h-4" /></button>)}
+                      {solicitud.estado === 'en_camino' && (<button onClick={() => confirmarActualizarEstado(solicitud.id, 'entregada')} className="text-purple-600 hover:text-purple-900" title="Marcar entregada"><CheckCircle className="w-4 h-4" /></button>)}
                     </div>
                   </td>
                 </tr>
@@ -394,8 +433,44 @@ const Solicitudes = () => {
             })}
           </tbody>
         </table>
+        {currentItems.length === 0 && solicitudesFiltradas.length > 0 && (<div className="text-center py-8 text-gray-500">No hay solicitudes en esta página.</div>)}
         {solicitudesFiltradas.length === 0 && (<div className="text-center py-8 text-gray-500">No hay solicitudes que coincidan con los filtros</div>)}
       </div>
+
+      {/* Controles de Paginación */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-6">
+          <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+            >
+              Anterior
+            </button>
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => paginate(i + 1)}
+                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                  currentPage === i + 1
+                    ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+            >
+              Siguiente
+            </button>
+          </nav>
+        </div>
+      )}
 
       {/* Modal de Detalles de Solicitud */}
       {showModal && selectedSolicitud && (
@@ -451,6 +526,9 @@ const Solicitudes = () => {
                         />
                         <div>
                           <span className="font-medium">{detalle.nombreProducto}</span>
+                          {detalle.size && (
+                            <span className="text-gray-500 ml-2">Talla: {detalle.size}</span>
+                          )}
                           <span className="text-gray-500 ml-2">x{detalle.cantidad}</span>
                         </div>
                       </div>

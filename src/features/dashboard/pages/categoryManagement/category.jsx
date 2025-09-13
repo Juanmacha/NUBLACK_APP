@@ -1,21 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import CategoryTable from "./components/categoryTable";
 import { useCategories } from "./hooks/useCategories";
+import { useProducts } from "../productManagement/hooks/useProducts";
 // Modales
 import VerCategoriaModal from "./components/seeCategory";
 import EditarCategoriaModal from "./components/editCategory";
-import CrearCategoriaModal from "./components/categoryCreate";
 import Swal from 'sweetalert2';
 
 function Category() {
   const [busqueda, setBusqueda] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todas");
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [elementosPorPagina] = useState(4);
 
-  const { categories, createCategory, updateCategory, deleteCategory } = useCategories();
+  const { categories, updateCategory } = useCategories();
+  const { products } = useProducts();
 
   const [modalVer, setModalVer] = useState(null);
   const [modalEditar, setModalEditar] = useState(null);
-  const [modalCrear, setModalCrear] = useState(false);
 
   // Filtro de categorías
   const categoriasFiltradas = categories.filter((cat) => {
@@ -33,67 +35,50 @@ function Category() {
     return matchBusqueda && matchEstado;
   });
 
-  const handleCrearCategoria = async (nuevaCategoria) => {
+  // Paginación
+  const indiceUltimoElemento = paginaActual * elementosPorPagina;
+  const indicePrimerElemento = indiceUltimoElemento - elementosPorPagina;
+  const elementosActuales = categoriasFiltradas.slice(indicePrimerElemento, indiceUltimoElemento);
+  const totalPaginas = Math.ceil(categoriasFiltradas.length / elementosPorPagina);
+
+  // Reiniciar a la primera página cuando los filtros cambian
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda, filtroEstado]);
+
+  const handleToggleCategoryStatus = async (id, newStatus) => {
+    const categoryToUpdate = categories.find(cat => cat.id === id);
+    if (!categoryToUpdate) {
+        Swal.fire('Error', 'La categoría no fue encontrada.', 'error');
+        return;
+    }
+
+    if (newStatus === 'Inactivo') {
+        const associatedProducts = products.filter(product => product.categoria === categoryToUpdate.nombre);
+        if (associatedProducts.length > 0) {
+            Swal.fire(
+                'Error',
+                'No se puede desactivar la categoría porque tiene productos asociados.',
+                'error'
+            );
+            return;
+        }
+    }
+
     try {
-      await createCategory(nuevaCategoria);
+      await updateCategory(id, { estado: newStatus });
       Swal.fire(
-        '¡Creada!',
-        'La categoría ha sido creada exitosamente.',
+        '¡Actualizado!',
+        `El estado de la categoría ha sido cambiado a ${newStatus}.`,
         'success'
       );
     } catch (error) {
       Swal.fire(
         'Error',
-        error.message || 'Hubo un problema al crear la categoría.',
+        error.message || 'Hubo un problema al cambiar el estado de la categoría.',
         'error'
       );
     }
-  };
-
-  const handleDeleteCategory = (id) => {
-    Swal.fire({
-      title: 'Confirmar Eliminación de Categoría',
-      text: `¿Estás seguro de que deseas eliminar la categoría con ID: ${id}? Esta acción es irreversible.`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        const { value: reason } = await Swal.fire({
-          title: 'Motivo de la eliminación',
-          input: 'textarea',
-          inputPlaceholder: 'Escribe el motivo de la eliminación...',
-          inputValidator: (value) => {
-            if (!value) {
-              return 'Necesitas escribir un motivo.';
-            }
-          },
-          showCancelButton: true,
-          confirmButtonText: 'Confirmar',
-          cancelButtonText: 'Cancelar'
-        });
-
-        if (reason) {
-          try {
-            await deleteCategory(id, reason);
-            Swal.fire(
-              '¡Eliminada!',
-              'La categoría ha sido eliminada.',
-              'success'
-            );
-          } catch (error) {
-            Swal.fire(
-              'Error',
-              error.message || 'Hubo un problema al eliminar la categoría.',
-              'error'
-            );
-          }
-        }
-      }
-    });
   };
 
   return (
@@ -103,13 +88,6 @@ function Category() {
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Categorías</h1>
           <p className="text-gray-500 mb-6">Administra las categorías de tu empresa</p>
         </div>
-        <button
-          onClick={() => setModalCrear(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-        >
-          <span className="text-lg">+</span>
-          Nueva Categoría
-        </button>
       </div>
 
       {/* Filtros */}
@@ -143,11 +121,46 @@ function Category() {
 
       {/* Tabla */}
       <CategoryTable
-        categorias={categoriasFiltradas}
+        categorias={elementosActuales}
         onVer={(cat) => setModalVer(cat)}
         onEditar={(cat) => setModalEditar(cat)}
-        onEliminar={(id) => handleDeleteCategory(id)}
+        onToggleStatus={handleToggleCategoryStatus}
       />
+
+      {/* Controles de Paginación */}
+      {totalPaginas > 1 && (
+        <div className="flex justify-center mt-6">
+          <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            <button
+              onClick={() => setPaginaActual(paginaActual - 1)}
+              disabled={paginaActual === 1}
+              className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+            >
+              Anterior
+            </button>
+            {[...Array(totalPaginas)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setPaginaActual(i + 1)}
+                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                  paginaActual === i + 1
+                    ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => setPaginaActual(paginaActual + 1)}
+              disabled={paginaActual === totalPaginas}
+              className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+            >
+              Siguiente
+            </button>
+          </nav>
+        </div>
+      )}
 
       {/* Modales */}
       {modalVer && <VerCategoriaModal categoria={modalVer} onClose={() => setModalVer(null)} />}
@@ -174,7 +187,6 @@ function Category() {
           }}
         />
       )}
-      {modalCrear && <CrearCategoriaModal onClose={() => setModalCrear(false)} onCrear={handleCrearCategoria} />}
     </div>
   );
 }

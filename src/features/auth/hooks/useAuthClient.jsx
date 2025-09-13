@@ -178,10 +178,13 @@ function useAuthClientLogic() {
     
     try {
       const clients = loadClients();
-      const { email } = userData;
+      const { email, documentNumber } = userData;
       
       if (clients.find(client => client.email === email)) {
         throw new Error('El correo electrónico ya está registrado');
+      }
+      if (documentNumber && clients.find(client => client.documentNumber === documentNumber)) {
+        throw new Error('El número de documento ya está registrado');
       }
 
       const newClient = {
@@ -232,29 +235,42 @@ function useAuthClientLogic() {
 
   const updateUser = useCallback(async (userData) => {
     try {
+      const session = loadSession();
+      if (!session) {
+        throw new Error("No se encontró una sesión activa.");
+      }
+
+      // Manejar actualización del Admin
+      if (session.user.role === 'Administrador') {
+        const updatedUser = { ...session.user, ...userData };
+        session.user = updatedUser;
+        saveSession(session);
+        dispatch({ type: 'UPDATE_USER_SUCCESS', payload: { user: updatedUser } });
+        return;
+      }
+
+      // Manejar actualización del Cliente
       const clients = loadClients();
-      const clientIndex = clients.findIndex(c => c.email === state.user.email);
+      const clientIndex = clients.findIndex(c => c.email === session.user.email);
 
       if (clientIndex === -1) {
-        throw new Error("Usuario no encontrado");
+        throw new Error("Usuario no encontrado en la base de datos de clientes.");
       }
 
       const updatedClient = { ...clients[clientIndex], ...userData };
       clients[clientIndex] = updatedClient;
       saveClients(clients);
 
-      const session = loadSession();
-      if (session) {
-        session.user = { ...session.user, ...userData };
-        saveSession(session);
-        dispatch({ type: 'UPDATE_USER_SUCCESS', payload: { user: session.user } });
-      }
+      const updatedUserInSession = { ...session.user, ...userData };
+      session.user = updatedUserInSession;
+      saveSession(session);
+      dispatch({ type: 'UPDATE_USER_SUCCESS', payload: { user: updatedUserInSession } });
 
     } catch (err) {
       console.error("Error updating user:", err);
       throw err;
     }
-  }, [state.user]);
+  }, []);
 
   const value = {
     user: state.user,

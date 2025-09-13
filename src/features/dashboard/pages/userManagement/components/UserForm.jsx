@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-const UserForm = ({ user, onSave, onClose, mode, isProfileEdit = false }) => {
+const UserForm = ({ user, onSave, onClose, mode, isProfileEdit = false, users }) => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -40,28 +40,75 @@ const UserForm = ({ user, onSave, onClose, mode, isProfileEdit = false }) => {
     });
   };
 
+  const handleNumberInputKeyDown = (e) => {
+    if (['e', 'E', '+', '-'].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   const validate = () => {
     const newErrors = {};
-    if (!formData.firstName) newErrors.firstName = "El primer nombre es requerido.";
-    if (!formData.lastName) newErrors.lastName = "El primer apellido es requerido.";
+
+    // Name and Last Name validation
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "El primer nombre es requerido.";
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.firstName.trim())) {
+      newErrors.firstName = "El nombre solo debe contener letras y espacios.";
+    }
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "El primer apellido es requerido.";
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.lastName.trim())) {
+      newErrors.lastName = "El apellido solo debe contener letras y espacios.";
+    }
+
+    // Document Type validation
     if (!formData.documentType) newErrors.documentType = "El tipo de documento es requerido.";
-    if (!formData.documentNumber) newErrors.documentNumber = "El número de documento es requerido.";
-    if (!formData.phone) newErrors.phone = "El teléfono es requerido.";
-    if (!formData.email) {
+
+    // Document Number validation
+    if (!formData.documentNumber.trim()) {
+      newErrors.documentNumber = "El número de documento es requerido.";
+    } else if (!/^\d+$/.test(formData.documentNumber.trim())) {
+      newErrors.documentNumber = "El número de documento solo debe contener dígitos.";
+    } else if (users && (mode === 'create' || (mode === 'edit' && formData.documentNumber !== user.documentNumber))) {
+      if (users.some(u => u.documentNumber === formData.documentNumber.trim())) {
+        newErrors.documentNumber = "Este número de documento ya está registrado.";
+      }
+    }
+
+    // Phone validation
+    if (!formData.phone.trim()) {
+      newErrors.phone = "El teléfono es requerido.";
+    } else if (!/^\d{10}$/.test(formData.phone.trim())) {
+      newErrors.phone = "El teléfono debe contener exactamente 10 dígitos.";
+    }
+
+    // Email validation
+    if (!formData.email.trim()) {
       newErrors.email = "El correo electrónico es requerido.";
+    } else if (/,/.test(formData.email)) {
+      newErrors.email = "El correo electrónico no puede contener comas.";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "El formato del correo electrónico no es válido.";
+    } else if (users && (mode === 'create' || (mode === 'edit' && formData.email !== user.email))) {
+      if (users.some(u => u.email === formData.email.trim())) {
+        newErrors.email = "Este correo electrónico ya está registrado.";
+      }
     }
+
+    // Password validation
     if (mode === 'create' || formData.password) {
+      const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{7,}$/;
       if (!formData.password) {
         newErrors.password = "La contraseña es requerida.";
-      } else if (formData.password.length < 6) {
-        newErrors.password = "La contraseña debe tener al menos 6 caracteres.";
+      } else if (!passwordRegex.test(formData.password)) {
+        newErrors.password = "La contraseña debe tener al menos 7 caracteres, una mayúscula y un caracter especial.";
       }
       if (formData.password !== confirmPassword) {
         newErrors.confirmPassword = "Las contraseñas no coinciden.";
       }
     }
+
+    // Role validation
     if (!formData.role && !isProfileEdit) newErrors.role = "El rol es requerido.";
     
     setErrors(newErrors);
@@ -147,6 +194,8 @@ const UserForm = ({ user, onSave, onClose, mode, isProfileEdit = false }) => {
           <input
             id="documentNumber"
             name="documentNumber"
+            type="number"
+            onKeyDown={handleNumberInputKeyDown}
             value={formData.documentNumber}
             onChange={handleChange}
             disabled={isViewMode}
@@ -163,7 +212,8 @@ const UserForm = ({ user, onSave, onClose, mode, isProfileEdit = false }) => {
         <input
           id="phone"
           name="phone"
-          type="tel"
+          type="number"
+          onKeyDown={handleNumberInputKeyDown}
           value={formData.phone}
           onChange={handleChange}
           disabled={isViewMode}

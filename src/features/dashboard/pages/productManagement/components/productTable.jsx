@@ -1,7 +1,8 @@
 import React from 'react';
 import { Eye, PencilSquare, Trash } from 'react-bootstrap-icons';
+import { formatCOPCustom } from '../../../../../shared/utils/currency'; // Importar la función
 
-const ProductTable = ({ products, onVer, onEditar, onEliminar }) => {
+const ProductTable = ({ products, onVer, onEditar, onEliminar, onToggleStatus }) => {
   return (
     <div className="bg-white shadow-md rounded-lg overflow-hidden">
       <table className="min-w-full divide-y divide-gray-200">
@@ -15,6 +16,9 @@ const ProductTable = ({ products, onVer, onEditar, onEliminar }) => {
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Categoría
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Producto para
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Precio
@@ -45,7 +49,6 @@ const ProductTable = ({ products, onVer, onEditar, onEliminar }) => {
                   </div>
                   <div className="ml-4">
                     <div className="text-sm font-medium text-gray-900">{product.nombre}</div>
-                    <div className="text-sm text-gray-500">{product.descripcion}</div>
                   </div>
                 </div>
               </td>
@@ -55,17 +58,25 @@ const ProductTable = ({ products, onVer, onEditar, onEliminar }) => {
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                €{product.precio}
+                {product.genero || 'N/A'}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {product.stock}
+                {formatCOPCustom(product.precio)}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {product.tallas && product.tallas.length > 0
+                  ? product.tallas.reduce((total, t) => total + t.stock, 0)
+                  : (product.stock || 0)} {/* Fallback a product.stock si no hay tallas */}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                  product.estado === 'activo' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
+                <span 
+                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full cursor-pointer ${
+                    product.estado === 'activo' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}
+                  onClick={() => onToggleStatus(product.id, product.estado === 'activo' ? 'inactivo' : 'activo')}
+                >
                   {product.estado || 'activo'}
                 </span>
               </td>

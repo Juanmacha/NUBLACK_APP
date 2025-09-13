@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { useAuthClient } from '../../auth/hooks/useAuthClient';
 import UserModal from './userManagement/components/UserModal';
-import UserForm from './userManagement/components/UserForm';
-import { useUsers } from './userManagement/hooks/useUsers';
+import Swal from 'sweetalert2';
 
 function PerfilAdmin() {
-    const { user, setUser } = useAuthClient();
-    const { updateUser } = useUsers();
+    const { user, updateUser } = useAuthClient();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleOpenModal = () => {
@@ -18,13 +16,35 @@ function PerfilAdmin() {
     };
 
     const handleSaveChanges = async (formData) => {
-        try {
-            const updatedUser = await updateUser(user.id, formData);
-            setUser(updatedUser); // Actualizar el usuario en el contexto de autenticación
-            setIsModalOpen(false);
-        } catch (error) {
-            console.error("Error updating user:", error);
-        }
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Se guardarán los cambios en el perfil.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, guardar cambios',
+            cancelButtonText: 'Cancelar'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await updateUser(formData);
+                    setIsModalOpen(false);
+                    Swal.fire(
+                        '¡Guardado!',
+                        'Tu perfil ha sido actualizado.',
+                        'success'
+                    );
+                } catch (error) {
+                    console.error("Error updating user:", error);
+                    Swal.fire(
+                        'Error',
+                        error.message || 'Hubo un problema al actualizar tu perfil.',
+                        'error'
+                    );
+                }
+            }
+        });
     };
 
     if (!user) {

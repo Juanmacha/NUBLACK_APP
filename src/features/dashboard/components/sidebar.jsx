@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { PersonCircle, GearFill, BoxArrowRight, HouseDoor, People, Folder, Basket3, Clipboard, Search } from "react-bootstrap-icons";
 import { useAuthClient } from '../../auth/hooks/useAuthClient';
+import Swal from 'sweetalert2';
 
 const selections = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: HouseDoor },
@@ -17,8 +18,21 @@ function Sidebar() {
     const { logout } = useAuthClient();
     
     const handleLogout = () => {
-        logout();
-        navigate('/login');
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Se cerrará tu sesión actual.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, cerrar sesión',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                logout();
+                navigate('/login');
+            }
+        });
     };
 
     return (

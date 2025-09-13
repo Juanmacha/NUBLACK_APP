@@ -134,6 +134,7 @@ export function useOrders() {
       descripcionProducto: producto.descripcion || '',
       imagenProducto: producto.imagen || '',
       cantidad: producto.quantity,
+      size: producto.size, // Add size here
       precioUnitario: producto.precio,
       subtotal: producto.precio * producto.quantity
     }));
@@ -184,6 +185,21 @@ export function useOrders() {
     return false;
   }, []);
 
+  const cancelarSolicitud = useCallback((solicitudId, motivo) => {
+    const solicitudes = loadSolicitudes();
+    const solicitudIndex = solicitudes.findIndex(s => s.id === solicitudId);
+
+    if (solicitudIndex !== -1) {
+      solicitudes[solicitudIndex].estado = 'cancelada';
+      solicitudes[solicitudIndex].motivoCancelacion = motivo;
+      solicitudes[solicitudIndex].updatedAt = new Date().toISOString();
+
+      saveSolicitudes(solicitudes);
+      return true;
+    }
+    return false;
+  }, []);
+
   // Agregar producto a solicitud existente
   const addProductoToSolicitud = useCallback((solicitudId, producto) => {
     const detalles = loadDetalles();
@@ -214,9 +230,12 @@ export function useOrders() {
     const detallesSolicitud = detalles.filter(d => d.solicitudId === solicitudId);
     const nuevoTotal = detallesSolicitud.reduce((sum, d) => sum + d.subtotal, 0);
     
-    solicitud.total = nuevoTotal;
-    solicitud.updatedAt = new Date().toISOString();
-    saveSolicitudes(solicitudes);
+    const solicitudIndex = solicitudes.findIndex(s => s.id === solicitudId);
+    if (solicitudIndex !== -1) {
+      solicitudes[solicitudIndex].total = nuevoTotal;
+      solicitudes[solicitudIndex].updatedAt = new Date().toISOString();
+      saveSolicitudes(solicitudes);
+    }
     
     return nuevoDetalle;
   }, []);
@@ -340,6 +359,7 @@ export function useOrders() {
     getDetallesSolicitud,
     createSolicitud,
     updateSolicitudEstado,
+    cancelarSolicitud,
     
     // Funciones de productos
     addProductoToSolicitud,

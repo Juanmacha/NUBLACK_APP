@@ -164,13 +164,6 @@ export const AuthClientProvider = ({ children }) => {
         };
         saveSession(session);
         dispatch({ type: 'LOGIN_SUCCESS', payload: session });
-        Swal.fire({
-          icon: 'success',
-          title: '¡Inicio de Sesión Exitoso!',
-          text: `Bienvenido, ${session.user.name || session.user.email}.`,
-          showConfirmButton: false,
-          timer: 1500
-        });
         return session;
       }
 
@@ -202,13 +195,6 @@ export const AuthClientProvider = ({ children }) => {
       
       saveSession(session);
       dispatch({ type: 'LOGIN_SUCCESS', payload: session });
-      Swal.fire({
-        icon: 'success',
-        title: '¡Inicio de Sesión Exitoso!',
-        text: `Bienvenido, ${session.user.name || session.user.email}.`,
-        showConfirmButton: false,
-        timer: 1500
-      });
       return session;
     } catch (err) {
       dispatch({ type: 'LOGIN_ERROR', payload: err.message });

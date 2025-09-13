@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUsers } from './hooks/useUsers';
 import UserTable from './components/userTable';
 import UserCreate from './components/userCreate';
@@ -17,6 +17,10 @@ const User = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(4); // 4 elementos por página
+
   const filteredUsers = users.filter(user => {
     const matchesSearch = !searchTerm || 
       user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -27,6 +31,19 @@ const User = () => {
     
     return matchesSearch && matchesRole;
   });
+
+  // Lógica de paginación
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Reiniciar a la primera página cuando los filtros cambian
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, roleFilter]);
 
   const handleCreate = async (userData) => {
     try {
@@ -138,6 +155,7 @@ const User = () => {
 
       {showCreateModal && (
         <UserCreate
+          users={users}
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleCreate}
         />
@@ -146,6 +164,7 @@ const User = () => {
       {showEditModal && selectedUser && (
         <EditUser
           user={selectedUser}
+          users={users}
           onClose={() => {
             setShowEditModal(false);
             setSelectedUser(null);

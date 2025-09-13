@@ -6,18 +6,26 @@ import Swal from 'sweetalert2';
 
 const ProductDetailModal = ({ product, onClose }) => {
   const [quantity, setQuantity] = useState(1);
+  const [selectedSize, setSelectedSize] = useState('');
   const { addToCart } = useCart();
 
   useEffect(() => {
     setQuantity(1); // Reset quantity when modal opens
-  }, [product]); // Depend on product to reset when a new product is selected
+    if (product && product.tallas && product.tallas.length > 0) {
+      setSelectedSize(product.tallas[0].talla); // Select the 'talla' property of the first object
+    } else {
+      setSelectedSize('');
+    }
+  }, [product]);
 
-  if (!product) { // No need for isOpen check here, as it's conditionally rendered
+  if (!product) {
     return null;
   }
 
+  const availableStock = selectedSize && product.stockPorTalla ? product.stockPorTalla[selectedSize] || 0 : 0;
+
   const handleIncrement = () => {
-    setQuantity((prevQuantity) => Math.min(prevQuantity + 1, product.stock));
+    setQuantity((prevQuantity) => Math.min(prevQuantity + 1, availableStock));
   };
 
   const handleDecrement = () => {
@@ -25,6 +33,16 @@ const ProductDetailModal = ({ product, onClose }) => {
   };
 
   const handleAddToCart = () => {
+    if (!selectedSize) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Talla No Seleccionada',
+        text: 'Por favor, selecciona una talla.',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
     if (quantity <= 0) {
       Swal.fire({
         icon: 'warning',
@@ -34,21 +52,21 @@ const ProductDetailModal = ({ product, onClose }) => {
       });
       return;
     }
-    if (quantity > product.stock) {
+    if (quantity > availableStock) {
       Swal.fire({
         icon: 'warning',
         title: 'Stock Insuficiente',
-        text: `Solo hay ${product.stock} unidades disponibles de este producto.`, 
+        text: `Solo hay ${availableStock} unidades disponibles para la talla ${selectedSize}.`,
         confirmButtonText: 'Entendido'
       });
       return;
     }
 
-    addToCart(product, quantity);
+    addToCart(product, selectedSize, quantity);
     Swal.fire({
       icon: 'success',
       title: '¡Agregado al Carrito!',
-      text: `${quantity} unidad(es) de ${product.nombre} ha(n) sido agregada(s) al carrito.`, 
+      text: `${quantity} unidad(es) de ${product.nombre} (Talla: ${selectedSize}) ha(n) sido agregada(s) al carrito.`,
       showConfirmButton: false,
       timer: 1500
     });
@@ -82,10 +100,31 @@ const ProductDetailModal = ({ product, onClose }) => {
             
             <div className="text-gray-400">
               <p><strong>Categoría:</strong> {product.categoria || 'N/A'}</p>
-              <p><strong>Stock Disponible:</strong> {product.stock > 0 ? product.stock : 'Agotado'}</p>
+              {product.genero && (
+                <p><strong>Producto para:</strong> {product.genero}</p>
+              )}
+              <p><strong>Stock Disponible (Talla {selectedSize || 'N/A'}):</strong> {availableStock > 0 ? availableStock : 'Agotado'}</p>
             </div>
 
-            {product.stock > 0 ? (
+            {product.tallas && product.tallas.length > 0 && (
+              <div className="flex items-center space-x-4 mt-6">
+                <label htmlFor="size-select" className="text-lg font-semibold">Talla:</label>
+                <select
+                  id="size-select"
+                  value={selectedSize}
+                  onChange={(e) => setSelectedSize(e.target.value)}
+                  className="px-3 py-2 bg-zinc-800 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                >
+                  {product.tallas
+                    .filter(sizeObj => product.stockPorTalla && product.stockPorTalla[sizeObj.talla] > 0) // Filtrar tallas con stock > 0
+                    .map((sizeObj) => (
+                      <option key={sizeObj.talla} value={sizeObj.talla}>{sizeObj.talla}</option>
+                    ))}
+                </select>
+              </div>
+            )}
+
+            {availableStock > 0 ? (
               <div className="flex items-center space-x-4 mt-6">
                 <label className="text-lg font-semibold">Cantidad:</label>
                 <div className="flex items-center border border-[#555] rounded-md">
@@ -113,7 +152,7 @@ const ProductDetailModal = ({ product, onClose }) => {
                 </button>
               </div>
             ) : (
-              <p className="text-red-500 text-xl font-semibold mt-6">Producto Agotado</p>
+              <p className="text-red-500 text-xl font-semibold mt-6">Producto Agotado o Talla no disponible</p>
             )}
           </div>
         </div>

@@ -4,27 +4,42 @@ import { useAuthClient } from "../../auth/hooks/useAuthClient";
 import { useCart } from "../hooks/useCart";
 import { useProducts } from "../hooks/useProducts";
 import { useCategories } from "../hooks/useCategories";
+import { formatCOPCustom } from "../../../shared/utils/currency";
 
 function FeaturedProducts({ searchTerm = "", onProductClick }) { // Add onProductClick prop
     const navigate = useNavigate();
     const { user } = useAuthClient();
-    const { addToCart } = useCart();
     const { products, loading } = useProducts();
     const { categories } = useCategories();
     const [paginaActual, setPaginaActual] = useState(1);
     const [notification, setNotification] = useState(null);
+    const [selectedGender, setSelectedGender] = useState(null);
+    const [selectedCategory, setSelectedCategory] = useState(null);
+
+    const categoryGroups = {
+        Hombre: ["Jeans", "Chaquetas", "Sudaderas", "Shorts"],
+        Mujer: ["Faldas", "Leggis"],
+        Unisex: ["Ropa deportiva", "Zapatos", "Mochilas", "Camisetas"]
+    };
 
     const activeProducts = products.filter(product => product.estado !== 'inactivo');
 
-    const filteredProducts = activeProducts.filter(producto =>
-        !searchTerm ||
-        producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (producto.categoria && producto.categoria.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    const filteredProducts = activeProducts.filter(producto => {
+        const searchTermMatch = !searchTerm ||
+            producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (producto.categoria && producto.categoria.toLowerCase().includes(searchTerm.toLowerCase()));
+        
+        const genderMatch = !selectedGender || producto.genero === selectedGender;
+
+        const categoryMatch = !selectedCategory || producto.categoria === selectedCategory;
+
+        return searchTermMatch && genderMatch && categoryMatch;
+    });
 
     useEffect(() => {
         setPaginaActual(1);
-    }, [searchTerm]);
+        setSelectedCategory(null); // Reset category when gender changes
+    }, [searchTerm, selectedGender]);
 
     const productosPorPagina = 8;
     const totalPaginas = Math.ceil(filteredProducts.length / productosPorPagina);
@@ -35,16 +50,6 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) { // Add onProduc
     const cambiarPagina = (pagina) => {
         if (pagina >= 1 && pagina <= totalPaginas) {
             setPaginaActual(pagina);
-        }
-    };
-
-    const handleAddToCart = (producto) => {
-        if (!user) {
-            navigate('/login');
-        } else {
-            addToCart(producto);
-            setNotification(`¡${producto.nombre} añadido al carrito!`);
-            setTimeout(() => setNotification(null), 3000);
         }
     };
 
@@ -87,6 +92,53 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) { // Add onProduc
                         </div>
                     </div>
 
+                    <div className="flex justify-center space-x-4 my-8">
+                        <button
+                            onClick={() => setSelectedGender(null)}
+                            className={`px-4 py-2 rounded-md text-sm font-medium ${!selectedGender ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white'}`}
+                        >
+                            Todos
+                        </button>
+                        <button
+                            onClick={() => setSelectedGender('Hombre')}
+                            className={`px-4 py-2 rounded-md text-sm font-medium ${selectedGender === 'Hombre' ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white'}`}
+                        >
+                            Hombre
+                        </button>
+                        <button
+                            onClick={() => setSelectedGender('Mujer')}
+                            className={`px-4 py-2 rounded-md text-sm font-medium ${selectedGender === 'Mujer' ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white'}`}
+                        >
+                            Mujer
+                        </button>
+                        <button
+                            onClick={() => setSelectedGender('Unisex')}
+                            className={`px-4 py-2 rounded-md text-sm font-medium ${selectedGender === 'Unisex' ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white'}`}
+                        >
+                            Unisex
+                        </button>
+                    </div>
+
+                    {selectedGender && (
+                        <div className="flex justify-center space-x-4 my-8">
+                            <button
+                                onClick={() => setSelectedCategory(null)}
+                                className={`px-4 py-2 rounded-md text-sm font-medium ${!selectedCategory ? 'bg-blue-400 text-black' : 'bg-gray-700 text-white'}`}
+                            >
+                                Todas las categorias
+                            </button>
+                            {categoryGroups[selectedGender] && categoryGroups[selectedGender].map(category => (
+                                <button
+                                    key={category}
+                                    onClick={() => setSelectedCategory(category)}
+                                    className={`px-4 py-2 rounded-md text-sm font-medium ${selectedCategory === category ? 'bg-blue-400 text-black' : 'bg-gray-700 text-white'}`}
+                                >
+                                    {category}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
                     {filteredProducts.length === 0 ? (
                         <div className="col-span-full text-center py-12">
                             <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,22 +178,22 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) { // Add onProduc
                                                         fill="currentColor"
                                                         viewBox="0 0 20 20"
                                                     >
-                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.262 3.89a1 1 0 00.95.69h4.084c.969 0 1.371 1.24.588 1.81l-3.302 2.397a1 1 0 00-.364 1.118l1.262 3.89c.3.921-.755 1.688-1.54 1.118l-3.302-2.397a1 1 0 00-1.175 0l-3.302 2.397c-.784.57-1.838-.197-1.539-1.118l1.262-3.89a1 1 0 00-.364-1.118L2.17 9.317c-.783-.57-.38-1.81.588-1.81h4.084a1 1 0 00.95-.69l1.262-3.89z" />
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.262 3.89a1 1 0 00.95.69h4.084c.969 0 1.371 1.24.588 1.81l-3.302 2.397a1 1 0 00-.364 1.118l1.262 3.89c.3.921-.755 1.688-1.54 1.118l-3.302-2.397a1 1 0 00-1.175 0l-3.302-2.397c-.784.57-1.838-.197-1.539-1.118l1.262-3.89a1 1 0 00-.364-1.118L2.17 9.317c-.783-.57-.38-1.81.588-1.81h4.084a1 1 0 00.95-.69l1.262-3.89z" />
                                                     </svg>
                                                 ))}
                                                 <span className="ml-2 text-sm text-gray-400">({producto.rating || 4.5})</span>
                                             </div>
                                             <div className="flex items-center space-x-2">
-                                                <span className="text-2xl font-bold text-[#ffcc00]">€{producto.precio}</span>
+                                                <span className="text-2xl font-bold text-[#ffcc00]">{formatCOPCustom(producto.precio)}</span>
                                                 {producto.precioOriginal && producto.precioOriginal > producto.precio && (
-                                                    <span className="text-sm text-gray-500 line-through">€{producto.precioOriginal}</span>
+                                                    <span className="text-sm text-gray-500 line-through">{formatCOPCustom(producto.precioOriginal)}</span>
                                                 )}
                                             </div>
                                             <button
-                                                onClick={() => handleAddToCart(producto)}
+                                                onClick={(e) => { e.stopPropagation(); onProductClick(producto); }}
                                                 className="w-full mt-4 bg-[#4B1E1E] hover:bg-[#6a2b2b] text-white font-semibold py-2 rounded"
                                             >
-                                                Añadir al Carrito
+                                                Ver Detalles
                                             </button>
                                         </div>
                                     </div>

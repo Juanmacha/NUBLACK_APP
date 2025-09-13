@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthClient } from "../hooks/useAuthClient.jsx";
+import Swal from 'sweetalert2';
+import { Eye, EyeSlash } from "react-bootstrap-icons";
 
 const LoginCliente = () => {
   const [formData, setFormData] = useState({
@@ -9,6 +11,7 @@ const LoginCliente = () => {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { login } = useAuthClient();
   const navigate = useNavigate();
@@ -28,11 +31,26 @@ const LoginCliente = () => {
     try {
       const session = await login(formData.email, formData.password);
 
-      // Redirigir basado en el rol
       if (session.user.role === "Administrador") {
-        navigate("/admin/dashboard");
+        Swal.fire({
+          icon: 'success',
+          title: '¡Inicio de Sesión Exitoso!',
+          text: 'Redirigiendo al Dashboard...',
+          showConfirmButton: false,
+          timer: 1500
+        }).then(() => {
+          navigate("/admin/dashboard");
+        });
       } else {
-        navigate("/");
+        Swal.fire({
+          icon: 'success',
+          title: '¡Inicio de Sesión Exitoso!',
+          text: 'Redirigiendo a la página principal...',
+          showConfirmButton: false,
+          timer: 1500
+        }).then(() => {
+          navigate("/");
+        });
       }
     } catch (err) {
       setError(err.message);
@@ -89,16 +107,25 @@ const LoginCliente = () => {
               >
                 Contraseña
               </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all pr-10"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-white"
+                >
+                  {showPassword ? <EyeSlash size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
 
             {/* Error message */}

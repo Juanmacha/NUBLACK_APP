@@ -15,26 +15,36 @@ export const loadProducts = () => {
           nombre: 'Jordan',
           descripcion: 'Zapatillas deportivas de alta calidad',
           precio: 10000,
-          stock: 10,
           categoria: 'Zapatos',
+          genero: 'Hombre',
           imagen: '/images/placeholder.png',
           estado: 'activo',
           rating: 4.5,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+          variants: [
+            { size: '7', stock: 5 },
+            { size: '7.5', stock: 10 },
+            { size: '8', stock: 7 }
+          ]
         },
         {
           id: 2,
           nombre: 'Nike Air Max',
           descripcion: 'Zapatillas cómodas para running',
           precio: 8500,
-          stock: 15,
           categoria: 'Zapatos',
+          genero: 'Mujer',
           imagen: '/images/placeholder.png',
           estado: 'activo',
           rating: 4.8,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+          variants: [
+            { size: '5.5', stock: 8 },
+            { size: '6.5', stock: 15 },
+            { size: '7', stock: 12 }
+          ]
         }
       ];
       localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(sampleProducts));
@@ -86,6 +96,8 @@ export const useProducts = () => {
       const newProduct = {
         id: generateId(),
         ...productData,
+        // Ensure variants exist, default to empty array if not provided
+        variants: productData.variants || [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };

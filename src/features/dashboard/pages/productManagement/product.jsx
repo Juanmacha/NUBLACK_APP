@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ProductTable from "./components/productTable";
 import { useProducts } from "./hooks/useProducts";
 import { useCategories } from "../categoryManagement/hooks/useCategories";
@@ -13,6 +13,8 @@ import CrearProductoModal from "./components/productCreate";
 function Product() {
   const [busqueda, setBusqueda] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState("todas");
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [elementosPorPagina] = useState(4);
 
   const { products, createProduct, updateProduct, deleteProduct } = useProducts();
   const { categories } = useCategories();
@@ -35,6 +37,17 @@ function Product() {
 
     return matchBusqueda && matchCategoria;
   });
+
+  // Paginación
+  const indiceUltimoElemento = paginaActual * elementosPorPagina;
+  const indicePrimerElemento = indiceUltimoElemento - elementosPorPagina;
+  const elementosActuales = productosFiltrados.slice(indicePrimerElemento, indiceUltimoElemento);
+  const totalPaginas = Math.ceil(productosFiltrados.length / elementosPorPagina);
+
+  // Reiniciar a la primera página cuando los filtros cambian
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda, filtroCategoria]);
 
   const handleCrearProducto = async (nuevoProducto) => {
     try {
@@ -83,8 +96,25 @@ function Product() {
     });
   };
 
+  const handleToggleProductStatus = async (id, newStatus) => {
+    try {
+      await updateProduct(id, { estado: newStatus });
+      Swal.fire(
+        '¡Actualizado!',
+        `El estado del producto ha sido cambiado a ${newStatus}.`,
+        'success'
+      );
+    } catch (error) {
+      Swal.fire(
+        'Error',
+        error.message || 'Hubo un problema al cambiar el estado del producto.',
+        'error'
+      );
+    }
+  };
+
   return (
-    <div className="flex-1 overflow-y-auto max-h-screen p-8">
+    <div className="flex-1 overflow-y-auto p-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Productos</h1>
@@ -133,11 +163,47 @@ function Product() {
 
       {/* Tabla */}
       <ProductTable
-        products={productosFiltrados}
+        products={elementosActuales}
         onVer={(prod) => setModalVer(prod)}
         onEditar={(prod) => setModalEditar(prod)}
         onEliminar={(id) => handleDeleteProduct(id)}
+        onToggleStatus={handleToggleProductStatus}
       />
+
+      {/* Controles de Paginación */}
+      {totalPaginas > 1 && (
+        <div className="flex justify-center mt-6">
+          <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            <button
+              onClick={() => setPaginaActual(paginaActual - 1)}
+              disabled={paginaActual === 1}
+              className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+            >
+              Anterior
+            </button>
+            {[...Array(totalPaginas)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setPaginaActual(i + 1)}
+                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                  paginaActual === i + 1
+                    ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => setPaginaActual(paginaActual + 1)}
+              disabled={paginaActual === totalPaginas}
+              className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+            >
+              Siguiente
+            </button>
+          </nav>
+        </div>
+      )}
 
       {/* Modales */}
       {modalVer && <VerProductoModal producto={modalVer} onClose={() => setModalVer(null)} />}

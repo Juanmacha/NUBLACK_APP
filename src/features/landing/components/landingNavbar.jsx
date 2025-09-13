@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthClient } from "../../auth/hooks/useAuthClient";
 import { useCart } from "../hooks/useCart";
 import SearchResults from "./SearchResults";
+import Swal from 'sweetalert2';
 
 function LandingNavbar({ searchTerm, onSearchChange, products }) {
   const navigate = useNavigate();
@@ -32,6 +33,24 @@ function LandingNavbar({ searchTerm, onSearchChange, products }) {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [searchRef]);
+
+  const handleLogout = () => {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Se cerrará tu sesión actual.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, cerrar sesión',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            logout();
+            setShowUserMenu(false);
+        }
+    });
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full h-16 border-b bg-black backdrop-blur supports-[backdrop-filter]:bg-black/90 border-gray-800 flex items-center justify-around">
@@ -121,10 +140,7 @@ function LandingNavbar({ searchTerm, onSearchChange, products }) {
                   Ver Perfil
                 </button>
                 <button
-                  onClick={() => {
-                    logout();
-                    setShowUserMenu(false);
-                  }}
+                  onClick={handleLogout}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   Cerrar Sesión

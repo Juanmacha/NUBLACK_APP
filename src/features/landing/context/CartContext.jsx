@@ -41,51 +41,53 @@ export const CartProvider = ({ children }) => {
     }
   }, [user?.email]);
 
-  const addToCart = (product) => {
+  const addToCart = (product, size, quantity) => {
     if (!user?.email) {
       console.error('No user logged in');
       return;
     }
-    if (!product || !product.id || !product.nombre || !product.precio) {
-      console.error('Invalid product data:', product);
+    if (!product || !product.id || !product.nombre || !product.precio || !size || !quantity) {
+      console.error('Invalid product data or missing size/quantity:', { product, size, quantity });
       return;
     }
+
     setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.id === product.id);
+      const existingItem = prevCart.find(item => item.id === product.id && item.size === size);
       let newCart;
+
       if (existingItem) {
         newCart = prevCart.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+          item.id === product.id && item.size === size
+            ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       } else {
-        newCart = [...prevCart, { ...product, quantity: 1 }];
+        newCart = [...prevCart, { ...product, size, quantity }];
       }
       saveCartToStorage(newCart, user.email);
       return newCart;
     });
   };
 
-  const removeFromCart = (productId) => {
+  const removeFromCart = (productId, size) => {
     if (!user?.email) return;
     setCart(prevCart => {
-      const newCart = prevCart.filter(item => item.id !== productId);
+      const newCart = prevCart.filter(item => !(item.id === productId && item.size === size));
       saveCartToStorage(newCart, user.email);
       return newCart;
     });
   };
 
-  const updateQuantity = (productId, quantity) => {
+  const updateQuantity = (productId, size, newQuantity) => {
     if (!user?.email) return;
-    if (quantity <= 0) {
-      removeFromCart(productId);
+    if (newQuantity <= 0) {
+      removeFromCart(productId, size);
       return;
     }
     setCart(prevCart => {
       const newCart = prevCart.map(item =>
-        item.id === productId
-          ? { ...item, quantity }
+        item.id === productId && item.size === size
+          ? { ...item, quantity: newQuantity }
           : item
       );
       saveCartToStorage(newCart, user.email);

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthClient } from "../hooks/useAuthClient.jsx";
+import { Eye, EyeSlash } from "react-bootstrap-icons";
 
 const RegistroCliente = () => {
   const [formData, setFormData] = useState({
@@ -13,8 +14,10 @@ const RegistroCliente = () => {
     password: "",
     confirmPassword: "",
   });
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { register } = useAuthClient();
   const navigate = useNavigate();
@@ -26,17 +29,69 @@ const RegistroCliente = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+  const handleNumberInputKeyDown = (e) => {
+    if (['e', 'E', '+', '-'].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
 
-    if (formData.password !== formData.confirmPassword) {
-      setError("Las contraseñas no coinciden");
-      return;
+  const validate = () => {
+    const newErrors = {};
+
+    if (!formData.documentType) newErrors.documentType = "El tipo de documento es requerido.";
+
+    if (!formData.documentNumber.trim()) {
+      newErrors.documentNumber = "El número de documento es requerido.";
+    } else if (!/^\d+$/.test(formData.documentNumber.trim())) {
+      newErrors.documentNumber = "El número de documento solo debe contener dígitos.";
     }
 
-    if (formData.password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres");
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "El primer nombre es requerido.";
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.firstName.trim())) {
+      newErrors.firstName = "El nombre solo debe contener letras y espacios.";
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "El primer apellido es requerido.";
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.lastName.trim())) {
+      newErrors.lastName = "El apellido solo debe contener letras y espacios.";
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = "El teléfono es requerido.";
+    } else if (!/^\d{10}$/.test(formData.phone.trim())) {
+      newErrors.phone = "El teléfono debe contener exactamente 10 dígitos.";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "El correo electrónico es requerido.";
+    } else if (/,/.test(formData.email)) {
+      newErrors.email = "El correo electrónico no puede contener comas.";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "El formato del correo electrónico no es válido.";
+    }
+
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':\"|,.<>\/?]).{7,}$/;
+    if (!formData.password) {
+      newErrors.password = "La contraseña es requerida.";
+    } else if (!passwordRegex.test(formData.password)) {
+      newErrors.password = "La contraseña debe tener al menos 7 caracteres, una mayúscula y un caracter especial.";
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Las contraseñas no coinciden.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrors({});
+
+    if (!validate()) {
       return;
     }
 
@@ -46,7 +101,7 @@ const RegistroCliente = () => {
       await register(formData);
       navigate("/login");
     } catch (err) {
-      setError(err.message);
+      setErrors({ form: err.message });
     } finally {
       setLoading(false);
     }
@@ -85,7 +140,6 @@ const RegistroCliente = () => {
                   name="documentType"
                   value={formData.documentType}
                   onChange={handleChange}
-                  required
                   className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
                 >
                   <option value="">Selecciona un tipo</option>
@@ -94,6 +148,7 @@ const RegistroCliente = () => {
                   <option value="TI">Tarjeta de Identidad</option>
                   <option value="PP">Pasaporte</option>
                 </select>
+                {errors.documentType && <p className="text-red-500 text-xs mt-1">{errors.documentType}</p>}
               </div>
 
               {/* Número de Documento */}
@@ -105,15 +160,16 @@ const RegistroCliente = () => {
                   Número de Documento *
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   id="documentNumber"
                   name="documentNumber"
                   value={formData.documentNumber}
                   onChange={handleChange}
-                  required
+                  onKeyDown={handleNumberInputKeyDown}
                   className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
                   placeholder="12345678"
                 />
+                {errors.documentNumber && <p className="text-red-500 text-xs mt-1">{errors.documentNumber}</p>}
               </div>
 
               {/* Primer Nombre */}
@@ -130,10 +186,10 @@ const RegistroCliente = () => {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  required
                   className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
                   placeholder="Juan"
                 />
+                {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
               </div>
 
               {/* Primer Apellido */}
@@ -150,10 +206,10 @@ const RegistroCliente = () => {
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
-                  required
                   className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
                   placeholder="Pérez"
                 />
+                {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
               </div>
 
               {/* Número de Teléfono */}
@@ -165,15 +221,16 @@ const RegistroCliente = () => {
                   Número de Teléfono *
                 </label>
                 <input
-                  type="tel"
+                  type="number"
                   id="phone"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  required
+                  onKeyDown={handleNumberInputKeyDown}
                   className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
                   placeholder="3001234567"
                 />
+                {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
               </div>
 
               {/* Correo Electrónico */}
@@ -190,10 +247,10 @@ const RegistroCliente = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  required
                   className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
                   placeholder="registrack@email.com"
                 />
+                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
               </div>
 
               {/* Contraseña */}
@@ -204,16 +261,25 @@ const RegistroCliente = () => {
                 >
                   Contraseña *
                 </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
-                  placeholder="••••••••"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all pr-10"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-white"
+                  >
+                    {showPassword ? <EyeSlash size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+                {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
               </div>
 
               {/* Confirmar Contraseña */}
@@ -224,23 +290,32 @@ const RegistroCliente = () => {
                 >
                   Confirmar Contraseña *
                 </label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
-                  placeholder="••••••••"
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all pr-10"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-white"
+                  >
+                    {showConfirmPassword ? <EyeSlash size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+                {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
               </div>
             </div>
 
             {/* Error message */}
-            {error && (
+            {errors.form && (
               <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded-lg text-sm mt-6">
-                {error}
+                {errors.form}
               </div>
             )}
 

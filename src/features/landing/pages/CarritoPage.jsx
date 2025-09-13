@@ -130,6 +130,11 @@ const CarritoPage = () => {
                         <p className="text-gray-400 text-sm truncate">
                           {item.descripcion}
                         </p>
+                        {item.size && (
+                          <p className="text-gray-400 text-sm mt-1">
+                            Talla: {item.size}
+                          </p>
+                        )}
                         <p className="text-[#ffcc00] font-semibold mt-1">
                           {formatCOPCustom(item.precio)}
                         </p>

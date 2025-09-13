@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from "react";
+import { useCategories } from "../hooks/useCategories";
 
 const CategoryForm = ({ category, onSave, onClose, mode }) => {
+  const { categories } = useCategories();
   const [form, setForm] = useState({
     nombre: "",
-    descripcion: "",
-    estado: "Activo",
   });
   const [errors, setErrors] = useState({});
 
@@ -47,6 +47,17 @@ const CategoryForm = ({ category, onSave, onClose, mode }) => {
 
     if (Object.keys(newErrors).length > 0) {
       return;
+    }
+
+    // Check for duplicate category name only in create mode
+    if (mode === "create") {
+      const isDuplicate = categories.some(
+        (cat) => cat.nombre.toLowerCase() === form.nombre.toLowerCase()
+      );
+      if (isDuplicate) {
+        setErrors({ ...newErrors, nombre: "Ya existe una categoría con este nombre." });
+        return;
+      }
     }
 
     onSave(form);
