@@ -1,7 +1,7 @@
 import React from 'react';
 import { Eye, PencilSquare, Trash } from 'react-bootstrap-icons';
 
-const UserTable = ({ users, onView, onEdit, onDelete }) => {
+const UserTable = ({ users, onView, onEdit, onDelete, onToggleStatus }) => {
   return (
     <div className="bg-white shadow-md rounded-lg overflow-hidden">
       <table className="min-w-full divide-y divide-gray-200">
@@ -21,6 +21,9 @@ const UserTable = ({ users, onView, onEdit, onDelete }) => {
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Rol
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Estado
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Acciones
@@ -50,6 +53,18 @@ const UserTable = ({ users, onView, onEdit, onDelete }) => {
                   user.role === 'Administrador' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
                 }`}>
                   {user.role}
+                </span>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <span 
+                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full cursor-pointer ${
+                    user.estado === 'activo' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}
+                  onClick={() => user.id !== 'admin-demo' && onToggleStatus(user.id, user.estado === 'activo' ? 'inactivo' : 'activo')}
+                >
+                  {user.estado || 'activo'}
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">

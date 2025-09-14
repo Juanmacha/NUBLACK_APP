@@ -1,28 +1,50 @@
+import React, { useState, useEffect } from "react";
+import { useCategories } from "../../dashboard/pages/categoryManagement/hooks/useCategories";
 import jordan from "/images/Jordan.png";
 
 function Categories() {
-  const categorias = [
-    {
-      nombre: "Calzado Deportivo",
-      descripcion: "Comodidad y estilo",
-      imagen: jordan
-    },
-    {
-      nombre: "Ropa Casual",
-      descripcion: "Para el día a día",
-      imagen: jordan
-    },
-    {
-      nombre: "Ropa Formal",
-      descripcion: "Elegancia profesional",
-      imagen: jordan
-    },
-    {
-      nombre: "Accesorios",
-      descripcion: "Completa tu look",
-      imagen: jordan
+  const { categories } = useCategories();
+  const [startIndex, setStartIndex] = useState(0);
+  const [visibleCategoriesCount, setVisibleCategoriesCount] = useState(0);
+
+  const activeCategories = categories.filter(categoria => categoria.estado !== 'Inactivo');
+
+  const currentCategories = activeCategories.slice(startIndex, startIndex + visibleCategoriesCount);
+
+  const maxStartIndex = activeCategories.length > visibleCategoriesCount ? activeCategories.length - visibleCategoriesCount : 0;
+
+  const goToNext = () => {
+    setStartIndex((prev) => (prev >= maxStartIndex ? 0 : prev + 1));
+  };
+
+  const goToPrev = () => {
+    setStartIndex((prev) => (prev <= 0 ? maxStartIndex : prev - 1));
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) { // Mobile
+        setVisibleCategoriesCount(2);
+      } else { // Desktop
+        setVisibleCategoriesCount(4);
+      }
+    };
+
+    handleResize(); // Set initial value
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (activeCategories.length > visibleCategoriesCount) {
+      const interval = setInterval(() => {
+        setStartIndex((prev) => (prev >= maxStartIndex ? 0 : prev + 1));
+      }, 3000); // Cambia de categoría cada 3 segundos
+
+      return () => clearInterval(interval);
     }
-  ];
+  }, [startIndex, activeCategories.length, visibleCategoriesCount, maxStartIndex]);
 
   return (
     <section id="categorias" className="bg-[#0a0a0a]  text-white py-12">
@@ -37,23 +59,42 @@ function Categories() {
       </div>
 
       {/* Tarjetas */}
-      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 px-6">
-        {categorias.map((categoria, index) => (
-          <div
-            key={index}
-            className="bg-[#111] rounded-lg p-4 flex flex-col items-center text-center shadow-lg transition-transform"
-          >
-            <div className="w-38 h-38 bg-gray-200 rounded-lg flex items-center justify-center hover:scale-105 transition-transform overflow-hidden">
-              <img
-                src={categoria.imagen}
-                alt={categoria.nombre}
-                className="object-cover w-full h-full"
-              />
+      <div className="max-w-7xl mx-auto relative">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 px-6">
+          {currentCategories.map((categoria) => (
+            <div
+              key={categoria.id}
+              className="bg-[#111] rounded-lg p-4 flex flex-col items-center text-center shadow-lg transition-transform"
+            >
+              <div className="w-38 h-38 bg-gray-200 rounded-lg flex items-center justify-center hover:scale-105 transition-transform overflow-hidden">
+                <img
+                  src={categoria.imagen || jordan}
+                  alt={categoria.nombre}
+                  className="object-cover w-full h-full"
+                />
+              </div>
+              <h3 className="mt-4 text-lg font-bold">{categoria.nombre}</h3>
+              <p className="text-gray-400 text-sm">{categoria.descripcion}</p>
             </div>
-            <h3 className="mt-4 text-lg font-bold">{categoria.nombre}</h3>
-            <p className="text-gray-400 text-sm">{categoria.descripcion}</p>
-          </div>
-        ))}
+          ))}
+        </div>
+
+        {activeCategories.length > visibleCategoriesCount && (
+          <>
+            <button
+              onClick={goToPrev}
+              className="absolute left-0 top-1/2 -translate-y-1/2 bg-gray-800 bg-opacity-50 text-white p-2 rounded-full ml-2 hover:bg-opacity-75"
+            >
+              &#10094;
+            </button>
+            <button
+              onClick={goToNext}
+              className="absolute right-0 top-1/2 -translate-y-1/2 bg-gray-800 bg-opacity-50 text-white p-2 rounded-full mr-2 hover:bg-opacity-75"
+            >
+              &#10095;
+            </button>
+          </>
+        )}
       </div>
     </section>
   );

@@ -4,7 +4,11 @@ const CATEGORIES_STORAGE_KEY = 'nublack_categories';
 
 const loadCategories = () => {
   try {
-    // Always load the default categories
+    const storedCategories = localStorage.getItem(CATEGORIES_STORAGE_KEY);
+    if (storedCategories) {
+      return JSON.parse(storedCategories);
+    }
+
     const defaultCategories = [
       {
         id: 1,

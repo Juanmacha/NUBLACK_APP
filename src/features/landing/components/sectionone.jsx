@@ -2,11 +2,11 @@ import React from "react";
 
 function SectionOne() {
     return (
-        <div id="inicio" className="w-full h-auto bg-[#0a0a0a] flex p-12">
-            <div className="p-12">
-                <h1 className="text-[#6b5b47] text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none pt-32">Descubre tu estilo unico</h1>
-                <p className="text-xl font-bold text-[#e5e5e5] pt-6">La mejor colección de zapatos, ropa y accesorios de moda. Calidad premium, precios increíbles y envío gratis en compras superiores a €50.</p>
-                <div className="pt-6">
+        <div id="inicio" className="w-full h-auto bg-[#0a0a0a] flex flex-col md:flex-row items-center justify-center p-6 md:p-12">
+            <div className="p-6 md:p-12 text-center md:text-left">
+                <h1 className="text-[#6b5b47] text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl xl:text-6xl/none pt-8 md:pt-32">Descubre tu estilo unico</h1>
+                <p className="text-base sm:text-lg font-bold text-[#e5e5e5] pt-4 md:pt-6">La mejor colección de zapatos, ropa y accesorios de moda. Calidad premium, precios increíbles y envío gratis en compras superiores a €50.</p>
+                <div className="pt-6 flex flex-col sm:flex-row justify-center md:justify-start gap-4">
                     <button className="bg-[#6b5b47] text-white py-2 px-4 rounded mr-4 hover:bg-[#C5A880] hover-glow-[#FFC107] font-semibold">Explorar Coleccion</button>
                     <button className="bg-transparent border border-[#6b5b47] text-[#6b5b47] py-2 px-4 rounded font-semibold hover:bg-[#6b5b47] hover:text-[#e5e5e5]">Ver ofertas</button>
                 </div>

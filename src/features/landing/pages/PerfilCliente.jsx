@@ -95,25 +95,25 @@ const PerfilCliente = () => {
   }, [periodo, user, cargarSolicitudes]);
 
   const handleCancelarSolicitud = async (solicitudId) => {
-    const { value: motivo } = await Swal.fire({
-      title: 'Cancelar Solicitud',
-      input: 'textarea',
-      inputLabel: 'Motivo de la cancelación',
-      inputPlaceholder: 'Escribe aquí el motivo por el cual cancelas la solicitud...',
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: "¡No podrás revertir esto!",
+      icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Confirmar Cancelación',
-      cancelButtonText: 'Cerrar',
-      inputValidator: (value) => {
-        if (!value) {
-          return '¡Necesitas escribir un motivo!'
-        }
-      }
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, cancelar solicitud',
+      cancelButtonText: 'No, mantener',
     });
 
-    if (motivo) {
-      cancelarSolicitud(solicitudId, motivo);
+    if (result.isConfirmed) {
+      cancelarSolicitud(solicitudId, "Cancelado por el cliente"); // Puedes pasar un motivo por defecto o vacío
       cargarSolicitudes(); 
-      Swal.fire('¡Cancelada!', 'La solicitud ha sido cancelada.', 'success');
+      Swal.fire(
+        '¡Cancelada!',
+        'La solicitud ha sido cancelada.',
+        'success'
+      );
     }
   };
 

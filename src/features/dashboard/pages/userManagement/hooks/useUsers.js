@@ -16,12 +16,25 @@ const ADMIN_DEMO = {
   documentNumber: "12345678",
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
+  estado: "activo",
 };
 
 const loadUsers = () => {
   try {
     const stored = localStorage.getItem(USERS_STORAGE_KEY);
-    const clients = stored ? JSON.parse(stored) : [];
+    let clients = stored ? JSON.parse(stored) : [];
+
+    // Asegurarse de que todos los clientes tengan un estado y un nombre
+    clients = clients.map(client => {
+      const firstName = client.firstName || '';
+      const lastName = client.lastName || '';
+      return {
+        ...client,
+        estado: client.estado || 'activo', // Valor por defecto 'activo'
+        name: client.name || (firstName || lastName ? `${firstName} ${lastName}`.trim() : client.email) // Construir nombre si falta, eliminando espacios extra
+      };
+    });
+
     // Incluir el admin demo en la lista
     return [ADMIN_DEMO, ...clients];
   } catch (error) {
@@ -73,6 +86,7 @@ export const useUsers = () => {
         name: `${userData.firstName} ${userData.lastName}`,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        estado: "activo", // Nuevo campo de estado
       };
 
       const updatedUsers = [...users, newUser];
