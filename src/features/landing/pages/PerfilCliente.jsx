@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthClient } from "../../auth/hooks/useAuthClient.jsx";
 import { useOrders } from "../hooks/useOrders";
 import { formatCOPCustom } from "../../../shared/utils/currency";
+import { Eye, EyeSlash } from "react-bootstrap-icons";
 import Swal from 'sweetalert2';
 
 const PerfilCliente = () => {
@@ -14,12 +15,17 @@ const PerfilCliente = () => {
   const [periodo, setPeriodo] = useState("mes_actual");
   const [userData, setUserData] = useState({
     name: "",
+    lastName: "",
     email: "",
     documentType: "",
     documentNumber: "",
     phone: "",
+    password: "",
+    confirmPassword: "",
   });
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
   const filtrarSolicitudesPorPeriodo = (solicitudes, periodo) => {
@@ -80,10 +86,13 @@ const PerfilCliente = () => {
       cargarSolicitudes();
       setUserData({
         name: user.name || "",
+        lastName: user.lastName || "",
         email: user.email || "",
         documentType: user.documentType || "",
         documentNumber: user.documentNumber || "",
         phone: user.phone || "",
+        password: "",
+        confirmPassword: "",
       });
     }
   }, [user, cargarSolicitudes]);
@@ -126,10 +135,13 @@ const PerfilCliente = () => {
     if (user) {
       setUserData({
         name: user.name || "",
+        lastName: user.lastName || "",
         email: user.email || "",
         documentType: user.documentType || "",
         documentNumber: user.documentNumber || "",
         phone: user.phone || "",
+        password: "",
+        confirmPassword: "",
       });
     }
     setErrors({});
@@ -137,14 +149,54 @@ const PerfilCliente = () => {
 
   const validate = () => {
     const newErrors = {};
-    if (!userData.name) newErrors.name = "El nombre es requerido.";
-    if (!userData.documentType) newErrors.documentType = "El tipo de documento es requerido.";
-    if (!userData.documentNumber) newErrors.documentNumber = "El número de documento es requerido.";
-    if (!userData.phone) newErrors.phone = "El teléfono es requerido.";
-    if (!userData.email) {
+    
+    // Validación de nombre
+    if (!userData.name.trim()) {
+      newErrors.name = "El nombre es requerido.";
+    } else if (!/^[a-zA-Z\s]+$/.test(userData.name.trim())) {
+      newErrors.name = "El nombre solo debe contener letras y espacios.";
+    }
+    
+    // Validación de apellido
+    if (!userData.lastName.trim()) {
+      newErrors.lastName = "El apellido es requerido.";
+    } else if (!/^[a-zA-Z\s]+$/.test(userData.lastName.trim())) {
+      newErrors.lastName = "El apellido solo debe contener letras y espacios.";
+    }
+    
+    // Validación de email
+    if (!userData.email.trim()) {
       newErrors.email = "El correo electrónico es requerido.";
     } else if (!/\S+@\S+\.\S+/.test(userData.email)) {
       newErrors.email = "El formato del correo electrónico no es válido.";
+    }
+    
+    // Validación de documento
+    if (!userData.documentType) {
+      newErrors.documentType = "El tipo de documento es requerido.";
+    }
+    if (!userData.documentNumber.trim()) {
+      newErrors.documentNumber = "El número de documento es requerido.";
+    } else if (!/^\d+$/.test(userData.documentNumber.trim())) {
+      newErrors.documentNumber = "El número de documento solo debe contener dígitos.";
+    }
+    
+    // Validación de teléfono
+    if (!userData.phone.trim()) {
+      newErrors.phone = "El teléfono es requerido.";
+    } else if (!/^\d{10}$/.test(userData.phone.trim())) {
+      newErrors.phone = "El teléfono debe contener exactamente 10 dígitos.";
+    }
+    
+    // Validación de contraseña (opcional, solo si se proporciona)
+    if (userData.password) {
+      const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':\"|,.<>\/?]).{7,}$/;
+      if (!passwordRegex.test(userData.password)) {
+        newErrors.password = "La contraseña debe tener al menos 7 caracteres, una mayúscula y un caracter especial.";
+      }
+      if (userData.password !== userData.confirmPassword) {
+        newErrors.confirmPassword = "Las contraseñas no coinciden.";
+      }
     }
     
     setErrors(newErrors);
@@ -241,73 +293,157 @@ const PerfilCliente = () => {
 
           {isEditing ? (
             <div>
+              {/* Información Personal */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-[#e5e5e5] mb-4 border-b border-[#333] pb-2">
+                  Información Personal
+                </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-gray-400">Nombre:</label>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Nombre *</label>
                   <input
                     type="text"
                     name="name"
                     value={userData.name}
                     onChange={handleChange}
-                    className="w-full bg-[#1f1f1f] text-white p-2 rounded mt-1"
-                  />
-                   {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
+                      className="w-full bg-[#1f1f1f] text-white p-3 rounded-lg border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:border-transparent transition-all"
+                      placeholder="Ingresa tu nombre"
+                    />
+                    {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Apellido *</label>
+                    <input
+                      type="text"
+                      name="lastName"
+                      value={userData.lastName}
+                      onChange={handleChange}
+                      className="w-full bg-[#1f1f1f] text-white p-3 rounded-lg border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:border-transparent transition-all"
+                      placeholder="Ingresa tu apellido"
+                    />
+                    {errors.lastName && <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>}
                 </div>
+                  
                 <div>
-                  <label className="text-gray-400">Email:</label>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Email *</label>
                   <input
                     type="email"
                     name="email"
                     value={userData.email}
                     onChange={handleChange}
-                    className="w-full bg-[#1f1f1f] text-white p-2 rounded mt-1"
-                  />
-                   {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
+                      className="w-full bg-[#1f1f1f] text-white p-3 rounded-lg border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:border-transparent transition-all"
+                      placeholder="correo@ejemplo.com"
+                    />
+                    {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Teléfono *</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={userData.phone}
+                      onChange={handleChange}
+                      className="w-full bg-[#1f1f1f] text-white p-3 rounded-lg border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:border-transparent transition-all"
+                      placeholder="3001234567"
+                    />
+                    {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
+                  </div>
                 </div>
+                </div>
+
+              {/* Documento de Identidad */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-[#e5e5e5] mb-4 border-b border-[#333] pb-2">
+                  Documento de Identidad
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-gray-400">Documento:</label>
-                  <div className="flex gap-2">
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Tipo de Documento *</label>
                   <select
                       name="documentType"
                       value={userData.documentType}
                       onChange={handleChange}
-                      className="w-1/3 bg-[#1f1f1f] text-white p-2 rounded mt-1"
+                      className="w-full bg-[#1f1f1f] text-white p-3 rounded-lg border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:border-transparent transition-all"
                     >
-                      <option value="">Seleccionar...</option>
+                      <option value="">Selecciona un tipo</option>
                       <option value="CC">Cédula de Ciudadanía</option>
                       <option value="CE">Cédula de Extranjería</option>
                       <option value="TI">Tarjeta de Identidad</option>
                       <option value="PP">Pasaporte</option>
                     </select>
+                    {errors.documentType && <p className="text-xs text-red-500 mt-1">{errors.documentType}</p>}
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Número de Documento *</label>
                     <input
                       type="text"
                       name="documentNumber"
                       value={userData.documentNumber}
                       onChange={handleChange}
-                      className="w-2/3 bg-[#1f1f1f] text-white p-2 rounded mt-1"
-                      placeholder="Número"
+                      className="w-full bg-[#1f1f1f] text-white p-3 rounded-lg border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:border-transparent transition-all"
+                      placeholder="12345678"
                     />
-                  </div>
-                  <div className="flex gap-2">
-                  <div className="w-1/3">
-                  {errors.documentType && <p className="text-xs text-red-500">{errors.documentType}</p>}
-                  </div>
-                  <div className="w-2/3">
-                  {errors.documentNumber && <p className="text-xs text-red-500">{errors.documentNumber}</p>}
+                    {errors.documentNumber && <p className="text-xs text-red-500 mt-1">{errors.documentNumber}</p>}
                   </div>
                   </div>
                 </div>
+
+              {/* Cambio de Contraseña */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-[#e5e5e5] mb-4 border-b border-[#333] pb-2">
+                  Cambio de Contraseña (Opcional)
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Nueva Contraseña</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        value={userData.password}
+                        onChange={handleChange}
+                        className="w-full bg-[#1f1f1f] text-white p-3 rounded-lg border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:border-transparent transition-all pr-10"
+                        placeholder="Deja vacío para mantener la actual"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-white transition-colors"
+                      >
+                        {showPassword ? <EyeSlash size={20} /> : <Eye size={20} />}
+                      </button>
+                    </div>
+                    {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
+                  </div>
+                  
                 <div>
-                  <label className="text-gray-400">Teléfono:</label>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Confirmar Contraseña</label>
+                    <div className="relative">
                   <input
-                    type="tel"
-                    name="phone"
-                    value={userData.phone}
+                        type={showConfirmPassword ? "text" : "password"}
+                        name="confirmPassword"
+                        value={userData.confirmPassword}
                     onChange={handleChange}
-                    className="w-full bg-[#1f1f1f] text-white p-2 rounded mt-1"
-                  />
-                  {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
+                        className="w-full bg-[#1f1f1f] text-white p-3 rounded-lg border border-[#333] focus:outline-none focus:ring-2 focus:ring-[#ffcc00] focus:border-transparent transition-all pr-10"
+                        placeholder="Confirma tu nueva contraseña"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-white transition-colors"
+                      >
+                        {showConfirmPassword ? <EyeSlash size={20} /> : <Eye size={20} />}
+                      </button>
+                    </div>
+                    {errors.confirmPassword && <p className="text-xs text-red-500 mt-1">{errors.confirmPassword}</p>}
                 </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  La contraseña debe tener al menos 7 caracteres, una mayúscula y un caracter especial.
+                </p>
               </div>
               <div className="mt-6 flex justify-end gap-4">
                 <button
@@ -330,6 +466,10 @@ const PerfilCliente = () => {
                 <p className="text-gray-400">
                   <strong>Nombre:</strong>{" "}
                   <span className="text-[#e5e5e5]">{user.name}</span>
+                </p>
+                <p className="text-gray-400">
+                  <strong>Apellido:</strong>{" "}
+                  <span className="text-[#e5e5e5]">{user.lastName || "No especificado"}</span>
                 </p>
                 <p className="text-gray-400">
                   <strong>Email:</strong>{" "}

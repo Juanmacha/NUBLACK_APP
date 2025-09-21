@@ -160,154 +160,279 @@ const Solicitudes = () => {
   };
 
   const handleDownloadPDF = () => {
-    const doc = new jsPDF();
+    const doc = new jsPDF('p', 'mm', 'a4');
     const today = new Date();
-    const formattedDate = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+    const formattedDate = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+    const formattedTime = `${today.getHours().toString().padStart(2, '0')}:${today.getMinutes().toString().padStart(2, '0')}`;
 
-    // Colores corporativos
-    const primaryColor = '#2c3e50'; // Azul oscuro
-    const secondaryColor = '#7f8c8d'; // Gris
-    const successColor = '#27ae60'; // Verde
-
-    doc.setFont('Helvetica');
-
-    // --- Encabezado ---
-    const addHeader = () => {
-      try {
-        const imgData = '/images/NBlogo.png'; // Ruta pública
-        doc.addImage(imgData, 'PNG', 15, 10, 40, 15);
-      } catch (e) {
-        console.error("No se pudo cargar el logo. Usando texto como placeholder.");
-        Swal.fire({
-          icon: 'warning',
-          title: 'Advertencia de PDF',
-          text: 'No se pudo cargar el logo para el PDF. Se usará texto como placeholder.',
-        });
-        doc.setFontSize(16);
-        doc.setTextColor(primaryColor);
-        doc.text("NUBACK", 15, 20);
-      }
-
-      // Título
-      doc.setFontSize(18);
-      doc.setFont('Helvetica', 'bold');
-      doc.setTextColor(primaryColor);
-      doc.text('Solicitudes Aprobadas', 200, 20, { align: 'right' });
-
-      // Fecha
-      doc.setFontSize(10);
-      doc.setFont('Helvetica', 'normal');
-      doc.setTextColor(secondaryColor);
-      doc.text(formattedDate, 200, 27, { align: 'right' });
-
-      // Línea divisoria
-      doc.setDrawColor(primaryColor);
-      doc.line(15, 35, 200, 35);
+    // Paleta de colores empresarial
+    const colors = {
+      primary: '#1a365d',      // Azul marino corporativo
+      secondary: '#2d3748',    // Gris oscuro
+      accent: '#3182ce',       // Azul corporativo
+      success: '#38a169',      // Verde éxito
+      warning: '#ed8936',      // Naranja advertencia
+      light: '#f7fafc',        // Gris muy claro
+      dark: '#2d3748',         // Texto oscuro
+      border: '#e2e8f0'        // Borde gris
     };
 
-    // --- Pie de página ---
+    doc.setFont('helvetica');
+
+    // --- Encabezado Corporativo ---
+    const addHeader = () => {
+      // Fondo del encabezado
+      doc.setFillColor(colors.primary);
+      doc.rect(0, 0, 210, 50, 'F');
+
+      try {
+        // Logo de la empresa
+        const imgData = '/images/NBlogo.png';
+        doc.addImage(imgData, 'PNG', 15, 8, 35, 25);
+      } catch (e) {
+        // Logo de texto si no se puede cargar la imagen
+        doc.setFontSize(24);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('NUBACK', 15, 25);
+      }
+
+      // Información de la empresa
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(255, 255, 255);
+      doc.text('Sistema de Gestión de Domicilios', 15, 35);
+      doc.text('www.nublack.com', 15, 40);
+
+      // Título del reporte CENTRADO
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(255, 255, 255);
+      doc.text('REPORTE DE DOMICILIARIOS', 105, 20, { align: 'center' });
+
+      // Fecha y hora CENTRADAS
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Generado: ${formattedDate} - ${formattedTime}`, 105, 30, { align: 'center' });
+      doc.text(`Total de solicitudes: ${solicitudesFiltradas.filter(s => s.estado === 'aprobada').length}`, 105, 37, { align: 'center' });
+
+      // Línea divisoria
+      doc.setDrawColor(colors.accent);
+      doc.setLineWidth(0.5);
+      doc.line(15, 55, 195, 55);
+    };
+
+    // --- Pie de página profesional ---
     const addFooter = () => {
       const pageCount = doc.internal.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
+        
+        // Línea superior del pie
+        doc.setDrawColor(colors.border);
+        doc.setLineWidth(0.3);
+        doc.line(15, 280, 195, 280);
+        
+        // Información del pie
         doc.setFontSize(8);
-        doc.setTextColor(secondaryColor);
-        doc.text(
-          `Documento generado automáticamente por NUBACK – Todos los derechos reservados.`,
-          105,
-          285,
-          { align: 'center' }
-        );
-        doc.text(`Página ${i} de ${pageCount}`, 200, 285, { align: 'right' });
+        doc.setTextColor(colors.secondary);
+        doc.text('NUBACK - Sistema de Gestión de Domicilios', 15, 285);
+        doc.text('Documento confidencial - Uso interno únicamente', 15, 290);
+        doc.text(`Página ${i} de ${pageCount}`, 195, 285, { align: 'right' });
+        doc.text('Generado automáticamente', 195, 290, { align: 'right' });
       }
     };
 
-    // --- Contenido ---
+    // --- Tarjeta de solicitud mejorada ---
+    const addSolicitudCard = (solicitud, yPosition) => {
+      const detallesSolicitud = getDetallesSolicitud(solicitud.id);
+      const cardHeight = 85 + (detallesSolicitud.length * 8);
+
+      // Fondo de la tarjeta con sombra sutil
+      doc.setFillColor(255, 255, 255);
+      doc.setDrawColor(colors.border);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(15, yPosition, 180, cardHeight, 4, 4, 'FD');
+
+      // Borde superior con color corporativo
+      doc.setFillColor(colors.accent);
+      doc.rect(15, yPosition, 180, 8, 'F');
+
+      // Número de solicitud destacado
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(255, 255, 255);
+      doc.text(`SOLICITUD #${solicitud.numeroPedido || solicitud.id.slice(-6)}`, 20, yPosition + 6);
+
+      // Estado de la solicitud
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(255, 255, 255);
+      doc.text('APROBADA', 160, yPosition + 6);
+
+      let currentY = yPosition + 20;
+
+      // Información del cliente en dos columnas
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.primary);
+      doc.text('INFORMACIÓN DEL CLIENTE', 20, currentY);
+
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.dark);
+      doc.text(`Nombre: ${solicitud.nombreCompleto}`, 20, currentY + 8);
+      doc.text(`Teléfono: ${solicitud.telefonoContacto}`, 20, currentY + 14);
+      doc.text(`Email: ${solicitud.correoElectronico}`, 20, currentY + 20);
+
+      // Información para el domiciliario
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.primary);
+      doc.text('INFORMACIÓN PARA DOMICILIARIO', 110, currentY);
+
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.dark);
+      doc.text(`Dirección: ${solicitud.direccionEntrega}`, 110, currentY + 8);
+      doc.text(`Pago: ${solicitud.metodoPago === 'contraEntrega' ? 'Contra Entrega' : solicitud.metodoPago}`, 110, currentY + 14);
+      doc.text(`Ref: ${solicitud.referenciaDireccion || 'N/A'}`, 110, currentY + 20);
+
+      currentY += 35;
+
+      // Tabla de productos mejorada
+      autoTable(doc, {
+        startY: currentY,
+        margin: { left: 20, right: 20 },
+        tableWidth: 170,
+        head: [['PRODUCTO', 'CANT.', 'PRECIO UNIT.', 'SUBTOTAL']],
+        body: detallesSolicitud.map(d => [
+          d.nombreProducto,
+          d.cantidad.toString(),
+          formatCOPCustom(d.subtotal / d.cantidad),
+          formatCOPCustom(d.subtotal)
+        ]),
+        foot: [
+          ['', '', 'TOTAL PEDIDO:', formatCOPCustom(solicitud.total)]
+        ],
+        theme: 'striped',
+        headStyles: {
+          fillColor: [26, 54, 93], // colors.primary
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 10,
+          halign: 'center'
+        },
+        footStyles: {
+          fillColor: [49, 130, 206], // colors.accent
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 11
+        },
+        bodyStyles: {
+          fontSize: 9,
+          textColor: [45, 55, 72], // colors.dark
+          cellPadding: 4,
+          halign: 'left'
+        },
+        columnStyles: {
+          1: { halign: 'center' },
+          2: { halign: 'right' },
+          3: { halign: 'right' }
+        },
+        alternateRowStyles: {
+          fillColor: [247, 250, 252] // colors.light
+        },
+        tableLineColor: [226, 232, 240], // colors.border
+        tableLineWidth: 0.3
+      });
+
+      // Instrucciones para el domiciliario
+      currentY += (detallesSolicitud.length * 8) + 25;
+      
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.warning);
+      doc.text('INSTRUCCIONES IMPORTANTES:', 20, currentY);
+      
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.dark);
+      doc.text('• Verificar identidad del cliente antes de entregar', 20, currentY + 6);
+      doc.text('• Confirmar método de pago antes de la entrega', 20, currentY + 12);
+      doc.text('• Reportar cualquier incidencia inmediatamente', 20, currentY + 18);
+
+      return cardHeight + 15;
+    };
+
+    // --- Generación del PDF ---
     addHeader();
-    let y = 50; // Posición inicial después del encabezado
+    let y = 70;
 
     const solicitudesAprobadas = solicitudesFiltradas.filter(s => s.estado === 'aprobada');
 
     if (solicitudesAprobadas.length === 0) {
+      // Mensaje de estado vacío con diseño profesional
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.primary);
+      doc.text("ESTADO DEL REPORTE", 105, 75, { align: 'center' });
+      
+      // Caja de información más grande y centrada
+      doc.setFillColor(colors.light);
+      doc.setDrawColor(colors.border);
+      doc.setLineWidth(0.5);
+      doc.roundedRect(30, 85, 150, 80, 8, 8, 'FD');
+      
+      // Icono de información más grande
+      doc.setFontSize(32);
+      doc.setTextColor(colors.accent);
+      doc.text("ℹ", 105, 110, { align: 'center' });
+      
+      // Mensaje principal
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.dark);
+      doc.text("No hay solicitudes aprobadas", 105, 130, { align: 'center' });
+      
+      // Mensaje secundario
       doc.setFontSize(12);
-      doc.setTextColor(secondaryColor);
-      doc.text("No hay solicitudes aprobadas para mostrar.", 105, 60, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.secondary);
+      doc.text("para generar en este momento", 105, 145, { align: 'center' });
+      
+      // Información adicional
+      doc.setFontSize(10);
+      doc.setTextColor(colors.dark);
+      doc.text("Este reporte se actualiza automáticamente cuando hay", 105, 160, { align: 'center' });
+      doc.text("solicitudes en estado 'Aprobada'", 105, 170, { align: 'center' });
+      
+      // Información de contacto
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.secondary);
+      doc.text("Para más información, contacte al administrador del sistema", 105, 200, { align: 'center' });
+      doc.text("o consulte el panel de administración", 105, 210, { align: 'center' });
+      
+    } else {
+      solicitudesAprobadas.forEach((solicitud, index) => {
+        const cardHeight = addSolicitudCard(solicitud, y);
+        
+        // Verificar si necesitamos una nueva página
+        if (y + cardHeight > 250) {
+          addFooter();
+          doc.addPage();
+          addHeader();
+          y = 60;
+          addSolicitudCard(solicitud, y);
+        }
+        
+        y += cardHeight + 10;
+      });
     }
 
-    solicitudesAprobadas.forEach((solicitud) => {
-      const detallesSolicitud = getDetallesSolicitud(solicitud.id);
-      const cardHeight = 20 + (detallesSolicitud.length * 10) + 50; // Altura estimada de la tarjeta
-
-      if (y + cardHeight > 270) { // Verificar si hay espacio en la página
-        addFooter();
-        doc.addPage();
-        addHeader();
-        y = 50;
-      }
-
-      // Contenedor de la tarjeta
-      doc.setDrawColor(secondaryColor);
-      doc.setLineWidth(0.2);
-      doc.roundedRect(15, y, 185, cardHeight, 3, 3, 'S');
-
-      // Número de Solicitud
-      doc.setFontSize(14);
-      doc.setFont('Helvetica', 'bold');
-      doc.setTextColor(primaryColor);
-      doc.text(`#${solicitud.numeroPedido || solicitud.id.slice(-6)}`, 20, y + 12);
-
-      // Información del Cliente
-      doc.setFontSize(10);
-      doc.setFont('Helvetica', 'bold');
-      doc.text('Información del Cliente:', 20, y + 25);
-      doc.setFont('Helvetica', 'normal');
-      doc.text(`- Nombre: ${solicitud.nombreCompleto}`, 22, y + 32);
-      doc.text(`- Teléfono: ${solicitud.telefonoContacto}`, 22, y + 39);
-      doc.text(`- Email: ${solicitud.correoElectronico}`, 22, y + 46);
-
-      // Información para el Domiciliario
-      doc.setFont('Helvetica', 'bold');
-      doc.text('Información para el Domiciliario:', 110, y + 25);
-      doc.setFont('Helvetica', 'normal');
-      doc.text(`- Dirección: ${solicitud.direccionEntrega}`, 112, y + 32);
-      doc.text(`- Método de Pago: ${solicitud.metodoPago === 'contraEntrega' ? 'Contra Entrega' : solicitud.metodoPago}`, 112, y + 39);
-      doc.text(`- Nº Solicitud: #${solicitud.numeroPedido || solicitud.id.slice(-6)}`, 112, y + 46);
-
-      // Productos Solicitados
-      autoTable(doc, {
-        startY: y + 55,
-        margin: { left: 20 },
-        tableWidth: 170,
-        head: [['Producto', 'Cantidad', 'Valor']],
-        body: detallesSolicitud.map(d => [d.nombreProducto, d.cantidad, formatCOPCustom(d.subtotal)]),
-        foot: [['', 'Total del Pedido:', formatCOPCustom(solicitud.total)]],
-        theme: 'grid',
-        headStyles: {
-          fillColor: [44, 62, 80], // primaryColor
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-        },
-        footStyles: {
-          fillColor: [236, 240, 241], // Un gris claro
-          textColor: [44, 62, 80], // primaryColor
-          fontStyle: 'bold',
-        },
-        styles: {
-          cellPadding: 2,
-          fontSize: 10,
-          valign: 'middle',
-          halign: 'left',
-        },
-        columnStyles: {
-          2: { halign: 'right' },
-        },
-      });
-
-      y += cardHeight + 10; // Espacio entre tarjetas
-    });
-
     addFooter();
-    doc.save(`reporte_solicitudes_aprobadas_${formattedDate}.pdf`);
+    doc.save(`Reporte_Domiciliarios_${formattedDate.replace(/\//g, '-')}.pdf`);
   };
 
   if (loading) {

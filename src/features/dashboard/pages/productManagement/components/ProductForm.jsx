@@ -2,11 +2,17 @@ import React, { useState, useEffect } from "react";
 import Swal from 'sweetalert2';
 import { useCategories } from "../../categoryManagement/hooks/useCategories";
 import { useProducts } from "../hooks/useProducts";
-import { Upload, X } from "lucide-react";
+import { Upload, X, Eye } from "lucide-react";
+import ImageUpload from "../../../../../shared/components/ImageUpload";
+import { useToastContext } from "../../../../../shared/context/ToastContext";
+import LoadingSpinner from "../../../../../shared/components/LoadingSpinner";
+import Badge, { StatusBadge } from "../../../../../shared/components/Badge";
+import Tooltip from "../../../../../shared/components/Tooltip";
 
 const ProductForm = ({ product, onSave, onClose, mode }) => {
   const { categories } = useCategories();
   const { products } = useProducts();
+  const { success, error: showError } = useToastContext();
   const [formData, setFormData] = useState({
     nombre: "",
     descripcion: "",
@@ -40,6 +46,9 @@ const ProductForm = ({ product, onSave, onClose, mode }) => {
 
   useEffect(() => {
     if (product) {
+      // Si el producto tiene images (array), usarlo; si no, crear array con imagen principal
+      const images = product.images || (product.imagen ? [product.imagen] : []);
+      
       setFormData({
         id: product.id,
         nombre: product.nombre || "",
@@ -48,7 +57,7 @@ const ProductForm = ({ product, onSave, onClose, mode }) => {
         categoria: product.categoria || "",
         genero: product.genero || "", // Initialize genero
         tallas: product.tallas || [], // Initialize tallas
-        images: product.images || [],
+        images: images,
         estado: product.estado || "activo",
       });
     }
@@ -152,8 +161,13 @@ const ProductForm = ({ product, onSave, onClose, mode }) => {
       return acc;
     }, {});
 
-    // Añadir stockPorTalla y genero al formData antes de guardar
-    const productToSave = { ...formData, stockPorTalla, genero: formData.genero };
+    // Añadir stockPorTalla, genero e imagen principal al formData antes de guardar
+    const productToSave = { 
+      ...formData, 
+      stockPorTalla, 
+      genero: formData.genero,
+      imagen: formData.images.length > 0 ? formData.images[0] : null // Primera imagen como imagen principal
+    };
 
     onSave(productToSave);
     onClose();
@@ -163,32 +177,61 @@ const ProductForm = ({ product, onSave, onClose, mode }) => {
     const { name, value } = e.target;
     setFormData((prev) => {
       const newState = { ...prev, [name]: value };
+      
+      // Solo reiniciar tallas si realmente cambió la categoría o género
       if (name === "categoria" || name === "genero") {
         let newTallas = [];
+        
+        // Para zapatos, necesitamos tanto categoría como género
         if (newState.categoria === "Zapatos" && newState.genero) {
-          newTallas = (TALLA_OPTIONS[newState.categoria][newState.genero] || []).map(talla => ({
-            talla: talla,
-            stock: 0
-          }));
+          const tallasDisponibles = TALLA_OPTIONS[newState.categoria][newState.genero] || [];
+          newTallas = tallasDisponibles.map(talla => {
+            // Mantener el stock existente si la talla ya existía
+            const tallaExistente = prev.tallas.find(t => t.talla === talla);
+            return {
+              talla: talla,
+              stock: tallaExistente ? tallaExistente.stock : 0
+            };
+          });
         } else if (newState.categoria !== "Zapatos" && TALLA_OPTIONS[newState.categoria]) {
-          newTallas = (TALLA_OPTIONS[newState.categoria] || []).map(talla => ({
-            talla: talla,
-            stock: 0
-          }));
+          const tallasDisponibles = TALLA_OPTIONS[newState.categoria] || [];
+          newTallas = tallasDisponibles.map(talla => {
+            // Mantener el stock existente si la talla ya existía
+            const tallaExistente = prev.tallas.find(t => t.talla === talla);
+            return {
+              talla: talla,
+              stock: tallaExistente ? tallaExistente.stock : 0
+            };
+          });
         }
+        
         newState.tallas = newTallas;
       }
+      
       return newState;
     });
   };
 
   const handleTallaStockChange = (talla, stockValue) => {
-    setFormData((prev) => ({
-      ...prev,
-      tallas: prev.tallas.map(t =>
+    setFormData((prev) => {
+      const newTallas = prev.tallas.map(t =>
         t.talla === talla ? { ...t, stock: parseInt(stockValue) || 0 } : t
-      ),
-    }));
+      );
+      
+      // Si la talla no existe en el array, agregarla
+      const tallaExiste = newTallas.some(t => t.talla === talla);
+      if (!tallaExiste) {
+        newTallas.push({
+          talla: talla,
+          stock: parseInt(stockValue) || 0
+        });
+      }
+      
+      return {
+        ...prev,
+        tallas: newTallas
+      };
+    });
   };
 
   const isViewMode = mode === "view";
@@ -285,9 +328,18 @@ const ProductForm = ({ product, onSave, onClose, mode }) => {
                 const stockValue = currentTalla ? currentTalla.stock : 0;
                 return (
                   <div key={tallaOption} className="flex items-center space-x-2">
-                    <label htmlFor={`stock-${tallaOption}`} className="text-sm text-gray-700">
+                    <label className="text-sm text-gray-700 min-w-[60px]">
                       {tallaOption}:
                     </label>
+                    <div className="flex items-center border border-gray-300 rounded-md bg-gray-100">
+                      <button
+                        type="button"
+                        onClick={() => handleTallaStockChange(tallaOption, Math.max(0, stockValue - 1))}
+                        disabled={isViewMode || stockValue <= 0}
+                        className="px-3 py-1 bg-gray-200 text-gray-700 rounded-l-md hover:bg-gray-300 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        -
+                      </button>
                     <input
                       id={`stock-${tallaOption}`}
                       type="number"
@@ -296,8 +348,18 @@ const ProductForm = ({ product, onSave, onClose, mode }) => {
                       onChange={(e) => handleTallaStockChange(tallaOption, e.target.value)}
                       onKeyDown={handleNumberInputKeyDown}
                       disabled={isViewMode}
-                      className="w-full bg-gray-100 border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                        className="w-16 px-2 py-1 text-sm text-center border-0 bg-transparent focus:outline-none focus:ring-0"
+                        style={{ WebkitAppearance: 'none', MozAppearance: 'textfield' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleTallaStockChange(tallaOption, stockValue + 1)}
+                        disabled={isViewMode}
+                        className="px-3 py-1 bg-gray-200 text-gray-700 rounded-r-md hover:bg-gray-300 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -325,53 +387,127 @@ const ProductForm = ({ product, onSave, onClose, mode }) => {
       </div>
 
       <div className="space-y-4">
-        <label className="text-sm font-medium text-gray-700">Imágenes del Producto</label>
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-gray-700">
+            Imágenes del Producto
+            <Tooltip content="Sube hasta 5 imágenes del producto. Formatos: JPG, PNG, WebP. Máximo 5MB cada una.">
+              <span className="ml-1 text-gray-400 cursor-help">ℹ️</span>
+            </Tooltip>
+          </label>
+          {formData.images.length > 0 && (
+            <Badge variant="info" size="sm">
+              {formData.images.length} imagen{formData.images.length !== 1 ? 'es' : ''}
+            </Badge>
+          )}
+        </div>
+
         {isViewMode ? (
-          formData.images.length > 0 && (
+          formData.images.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {formData.images.map((image, index) => (
-                <div key={index} className="relative group">
+                <div key={index} className="relative group hover-lift">
                   <img
                     src={image}
                     alt={`Producto ${index + 1}`}
-                    className="w-full h-24 object-cover rounded-lg border border-gray-300"
+                    className="w-full h-48 object-cover rounded-lg border border-gray-300 shadow-sm"
                   />
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                    <Tooltip content="Ver imagen completa">
+                      <button
+                        type="button"
+                        onClick={() => window.open(image, '_blank')}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-3 bg-white rounded-full shadow-lg hover:bg-gray-100"
+                      >
+                        <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      </button>
+                    </Tooltip>
+                  </div>
                 </div>
               ))}
             </div>
+          ) : (
+            <div className="text-center py-12 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
+              <svg className="h-12 w-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p>No hay imágenes disponibles</p>
+            </div>
           )
         ) : (
-          <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-              dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-gray-100"
-            }`}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-          >
-            <Upload className="h-12 w-12 mx-auto text-gray-500" />
-            <p className="mt-4 text-sm font-medium text-gray-700">Arrastra y suelta imágenes aquí</p>
-            <p className="text-xs text-gray-500">o haz clic para seleccionar archivos</p>
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={(e) => handleFiles(Array.from(e.target.files || []))}
-              className="hidden"
-              id="file-upload"
-            />
-            <button
-              type="button"
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
-              onClick={() => document.getElementById("file-upload")?.click()}
-            >
-              Seleccionar Imágenes
-            </button>
+          <div className="space-y-4">
+            {/* Componente de subida de imágenes - MÁS PEQUEÑO */}
+            <div className="max-w-md mx-auto">
+              <ImageUpload
+                onImageSelect={(file, imageUrl) => {
+                  if (formData.images.length >= 5) {
+                    showError('Límite alcanzado', 'Solo puedes subir hasta 5 imágenes por producto.');
+                    return;
+                  }
+                  setFormData(prev => ({
+                    ...prev,
+                    images: [...prev.images, imageUrl]
+                  }));
+                  success('Imagen agregada', 'La imagen se ha subido correctamente.');
+                }}
+                onImageRemove={() => {
+                  // Se maneja individualmente en cada imagen
+                }}
+                maxSize={5 * 1024 * 1024} // 5MB
+                aspectRatio="square"
+                className="w-full"
+              />
+            </div>
+
+            {/* Galería de imágenes subidas */}
+            {formData.images.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium text-gray-700">Imágenes subidas:</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {formData.images.map((image, index) => (
+                    <div key={index} className="relative group hover-lift">
+                      <img
+                        src={image}
+                        alt={`Producto ${index + 1}`}
+                        className="w-full h-48 object-cover rounded-lg border border-gray-300 shadow-sm"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center space-x-2">
+                        <Tooltip content="Ver imagen completa">
+                          <button
+                            type="button"
+                            onClick={() => window.open(image, '_blank')}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-3 bg-white rounded-full shadow-lg hover:bg-gray-100"
+                          >
+                            <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          </button>
+                        </Tooltip>
+                        <Tooltip content="Eliminar imagen">
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-3 bg-white rounded-full shadow-lg hover:bg-red-100"
+                          >
+                            <X className="w-6 h-6 text-red-600" />
+                          </button>
+                        </Tooltip>
+                      </div>
+                      <div className="absolute top-1 left-1">
+                        <Badge variant="gray" size="sm">
+                          {index + 1}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
-
-        
       </div>
 
       <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">

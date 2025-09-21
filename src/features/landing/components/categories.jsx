@@ -40,7 +40,7 @@ function Categories() {
     if (activeCategories.length > visibleCategoriesCount) {
       const interval = setInterval(() => {
         setStartIndex((prev) => (prev >= maxStartIndex ? 0 : prev + 1));
-      }, 3000); // Cambia de categoría cada 3 segundos
+      }, 4000); // Cambia de categoría cada 4 segundos
 
       return () => clearInterval(interval);
     }
@@ -64,17 +64,19 @@ function Categories() {
           {currentCategories.map((categoria) => (
             <div
               key={categoria.id}
-              className="bg-[#111] rounded-lg p-4 flex flex-col items-center text-center shadow-lg transition-transform"
+              className="bg-[#111] rounded-lg p-6 flex flex-col items-center text-center shadow-lg transition-transform hover:scale-105 hover:shadow-xl min-h-[350px] justify-between"
             >
-              <div className="w-38 h-38 bg-gray-200 rounded-lg flex items-center justify-center hover:scale-105 transition-transform overflow-hidden">
+              <div className="w-48 h-48 bg-gray-200 rounded-lg flex items-center justify-center hover:scale-110 transition-transform overflow-hidden mb-4">
                 <img
                   src={categoria.imagen || jordan}
                   alt={categoria.nombre}
-                  className="object-cover w-full h-full"
+                  className="object-cover w-full h-full rounded-lg"
                 />
               </div>
-              <h3 className="mt-4 text-lg font-bold">{categoria.nombre}</h3>
-              <p className="text-gray-400 text-sm">{categoria.descripcion}</p>
+              <div className="flex-1 flex flex-col justify-center">
+                <h3 className="text-lg font-bold text-white mb-2">{categoria.nombre}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed">{categoria.descripcion}</p>
+              </div>
             </div>
           ))}
         </div>

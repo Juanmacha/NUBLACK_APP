@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthClient } from "../context/AuthClientContext";
 import Swal from 'sweetalert2';
-import { Eye, EyeSlash } from "react-bootstrap-icons";
+import { Eye, EyeSlash, ArrowLeft } from "react-bootstrap-icons";
 
 function LoginAdministrador() {
   const navigate = useNavigate();
@@ -38,6 +38,16 @@ function LoginAdministrador() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] text-white px-4">
+      {/* Botón Atrás */}
+      <button
+        onClick={() => navigate("/")}
+        className="fixed top-4 left-4 z-50 flex items-center gap-2 bg-[#111111] hover:bg-[#1a1a1a] text-white px-4 py-2 rounded-lg border border-[#333] transition-all duration-200 shadow-lg"
+        aria-label="Volver a la página principal"
+      >
+        <ArrowLeft size={20} />
+        <span className="hidden sm:inline">Atrás</span>
+      </button>
+      
       <div className="bg-zinc-900 p-8 rounded-xl shadow-lg w-full max-w-md">
         
         {/* Logo y título */}

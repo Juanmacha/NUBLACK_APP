@@ -4,17 +4,20 @@ import { BrowserRouter } from 'react-router-dom';
 import AppRoutes from './routes/routes';
 import { AuthClientProvider } from './features/auth/hooks/useAuthClient';
 import { CartProvider } from './features/landing/context/CartContext';
+import { ToastProvider } from './shared/context/ToastContext';
 
 
 const App = () => {
   return (
-    <AuthClientProvider>
-      <CartProvider>
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </CartProvider>
-    </AuthClientProvider>
+    <ToastProvider>
+      <AuthClientProvider>
+        <CartProvider>
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </CartProvider>
+      </AuthClientProvider>
+    </ToastProvider>
   );
 };
 

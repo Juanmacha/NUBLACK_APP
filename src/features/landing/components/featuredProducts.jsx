@@ -14,76 +14,72 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) {
     const [notification, setNotification] = useState(null);
     const [selectedGender, setSelectedGender] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
     const [isMobile, setIsMobile] = useState(false);
-    const [startIndex, setStartIndex] = useState(0);
 
+    // Agrupar categorías por género
     const categoryGroups = {
-        Hombre: ["Jeans", "Chaquetas", "Sudaderas", "Shorts"],
-        Mujer: ["Faldas", "Leggis"],
-        Unisex: ["Ropa deportiva", "Zapatos", "Mochilas", "Camisetas"]
+        'Hombre': ['Zapatos', 'Ropa', 'Accesorios'],
+        'Mujer': ['Zapatos', 'Ropa', 'Accesorios'],
+        'Unisex': ['Zapatos', 'Ropa', 'Accesorios']
     };
 
-    const activeProducts = products.filter(product => product.estado !== 'inactivo');
-
-    const filteredProducts = activeProducts.filter(producto => {
-        const searchTermMatch = !searchTerm ||
+    // Filtrar productos
+    const filteredProducts = products.filter(producto => {
+        const searchTermMatch = !searchTerm || 
             producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (producto.categoria && producto.categoria.toLowerCase().includes(searchTerm.toLowerCase()));
+            producto.categoria.toLowerCase().includes(searchTerm.toLowerCase());
         
         const genderMatch = !selectedGender || producto.genero === selectedGender;
-
         const categoryMatch = !selectedCategory || producto.categoria === selectedCategory;
 
         return searchTermMatch && genderMatch && categoryMatch;
     });
 
-    const visibleProductsCount = isMobile ? 6 : 8; // 6 for mobile, 8 for desktop
-    const currentProducts = filteredProducts.slice(startIndex, startIndex + visibleProductsCount);
-    const maxStartIndex = filteredProducts.length > visibleProductsCount ? filteredProducts.length - visibleProductsCount : 0;
+    // Configuración responsive
+    const visibleProductsCount = isMobile ? 2 : 12; // 4 columnas x 3 filas = 12 productos en escritorio
+    const totalPages = Math.ceil(filteredProducts.length / visibleProductsCount);
 
-    const goToNext = () => {
-        setStartIndex((prev) => (prev >= maxStartIndex ? 0 : prev + 1));
-    };
-
-    const goToPrev = () => {
-        setStartIndex((prev) => (prev <= 0 ? maxStartIndex : prev - 1));
-    };
-
+    // Efecto para manejar el cambio de tamaño de pantalla
     useEffect(() => {
         const handleResize = () => {
-            setIsMobile(window.innerWidth < 768); // Tailwind's 'md' breakpoint is 768px
+            setIsMobile(window.innerWidth < 768);
         };
-
-        handleResize(); // Set initial value
+        
+        handleResize();
         window.addEventListener('resize', handleResize);
 
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    // Resetear página cuando cambien los filtros
     useEffect(() => {
-        if (isMobile) {
-            const interval = setInterval(() => {
-                if (filteredProducts.length > visibleProductsCount) {
-                    goToNext();
-                }
-            }, 3000); // Cambia de producto cada 3 segundos
+        setCurrentPage(1);
+    }, [selectedGender, selectedCategory, searchTerm]);
 
-            return () => clearInterval(interval);
-        }
-    }, [startIndex, filteredProducts.length, isMobile, visibleProductsCount]);
+    // Calcular productos visibles
+    const startIdx = (currentPage - 1) * visibleProductsCount;
+    const endIdx = startIdx + visibleProductsCount;
+    const currentProducts = filteredProducts.slice(startIdx, endIdx);
 
-    useEffect(() => {
-        setStartIndex(0); // Reset carousel position when filters change
-        setSelectedCategory(null); // Reset category when gender changes
-    }, [searchTerm, selectedGender]);
+    const goToPrev = () => {
+        setCurrentPage(prev => prev > 1 ? prev - 1 : totalPages);
+    };
+
+    const goToNext = () => {
+        setCurrentPage(prev => prev < totalPages ? prev + 1 : 1);
+    };
+
+    const goToPage = (page) => {
+        setCurrentPage(page);
+    };
 
     if (loading) {
         return (
             <section id="productos" className="w-full p-12 md:py-24 lg:py-32 bg-[#0a0a0a]">
                 <div className="container px-4 md:px-6">
-                    <div className="text-center py-12">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ffcc00] mx-auto"></div>
-                        <p className="text-gray-500 mt-4">Cargando productos...</p>
+                    <div className="text-center">
+                        <div className="text-[#6b5b47] text-2xl">Cargando productos...</div>
                     </div>
                 </div>
             </section>
@@ -116,38 +112,38 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) {
                         </div>
                     </div>
 
-                    <div className="flex justify-center space-x-4 my-8">
+                    <div className="flex flex-wrap justify-center gap-2 sm:gap-4 my-6 sm:my-8 px-4">
                         <button
                             onClick={() => setSelectedGender(null)}
-                            className={`px-4 py-2 rounded-md text-sm font-medium ${!selectedGender ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white'}`}
+                            className={`px-3 py-2 sm:px-4 rounded-md text-xs sm:text-sm font-medium transition-colors ${!selectedGender ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white hover:bg-gray-600'}`}
                         >
                             Todos
                         </button>
                         <button
                             onClick={() => setSelectedGender('Hombre')}
-                            className={`px-4 py-2 rounded-md text-sm font-medium ${selectedGender === 'Hombre' ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white'}`}
+                            className={`px-3 py-2 sm:px-4 rounded-md text-xs sm:text-sm font-medium transition-colors ${selectedGender === 'Hombre' ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white hover:bg-gray-600'}`}
                         >
                             Hombre
                         </button>
                         <button
                             onClick={() => setSelectedGender('Mujer')}
-                            className={`px-4 py-2 rounded-md text-sm font-medium ${selectedGender === 'Mujer' ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white'}`}
+                            className={`px-3 py-2 sm:px-4 rounded-md text-xs sm:text-sm font-medium transition-colors ${selectedGender === 'Mujer' ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white hover:bg-gray-600'}`}
                         >
                             Mujer
                         </button>
                         <button
                             onClick={() => setSelectedGender('Unisex')}
-                            className={`px-4 py-2 rounded-md text-sm font-medium ${selectedGender === 'Unisex' ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white'}`}
+                            className={`px-3 py-2 sm:px-4 rounded-md text-xs sm:text-sm font-medium transition-colors ${selectedGender === 'Unisex' ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white hover:bg-gray-600'}`}
                         >
                             Unisex
                         </button>
                     </div>
 
                     {selectedGender && (
-                        <div className="flex justify-center space-x-4 my-8">
+                        <div className="flex flex-wrap justify-center gap-2 sm:gap-4 my-6 sm:my-8 px-4">
                             <button
                                 onClick={() => setSelectedCategory(null)}
-                                className={`px-4 py-2 rounded-md text-sm font-medium ${!selectedCategory ? 'bg-blue-400 text-black' : 'bg-gray-700 text-white'}`}
+                                className={`px-3 py-2 sm:px-4 rounded-md text-xs sm:text-sm font-medium transition-colors ${!selectedCategory ? 'bg-blue-400 text-black' : 'bg-gray-700 text-white hover:bg-gray-600'}`}
                             >
                                 Todas las categorias
                             </button>
@@ -155,7 +151,7 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) {
                                 <button
                                     key={category}
                                     onClick={() => setSelectedCategory(category)}
-                                    className={`px-4 py-2 rounded-md text-sm font-medium ${selectedCategory === category ? 'bg-blue-400 text-black' : 'bg-gray-700 text-white'}`}
+                                    className={`px-3 py-2 sm:px-4 rounded-md text-xs sm:text-sm font-medium transition-colors ${selectedCategory === category ? 'bg-blue-400 text-black' : 'bg-gray-700 text-white hover:bg-gray-600'}`}
                                 >
                                     {category}
                                 </button>
@@ -175,33 +171,34 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) {
                         </div>
                     ) : (
                         <>
-                            
-
                             <div className="max-w-7xl mx-auto relative">
-                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-32 mt-12 px-6 justify-items-center">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-12 px-4 sm:px-6">
                                     {currentProducts.map((producto) => (
                                         <div
                                             key={producto.id}
-                                            className="bg-[#111111] text-[#f5f5f5] rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all cursor-pointer"
+                                            className="bg-[#111111] text-[#f5f5f5] rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all cursor-pointer min-h-[300px] sm:min-h-[280px] lg:min-h-[320px] flex flex-col"
                                             onClick={() => onProductClick(producto)}
                                         >
                                             <div className="relative">
-                                                <div className="w-32 h-24 lg:w-64 lg:h-64 bg-gray-200 rounded-lg flex items-center justify-center hover:scale-105 transition-transform overflow-hidden mx-auto">
+                                                <div className="w-full h-32 sm:h-40 lg:h-44 xl:h-48 bg-gray-200 rounded-lg flex items-center justify-center hover:scale-105 transition-transform overflow-hidden">
                                                     <img
                                                         src={producto.imagen || "/placeholder.svg"}
                                                         alt={producto.nombre}
-                                                        className="object-cover w-full h-full"
+                                                        className="object-cover w-full h-full rounded-lg"
                                                     />
                                                 </div>
                                             </div>
-                                            <div className="p-4">
+                                            <div className="p-3 sm:p-3 lg:p-3 xl:p-4 flex-1 flex flex-col justify-between">
+                                                <div>
                                                 <span className="inline-block text-xs px-2 py-1 rounded bg-[#222] text-gray-300 mb-2">
                                                     {producto.categoria || 'Sin categoría'}
                                                 </span>
-                                                <h3 className="text-lg font-semibold mb-2 text-center">
+                                                <h3 className="text-sm sm:text-sm lg:text-sm xl:text-base font-semibold mb-2 text-center">
                                                     {producto.nombre}
                                                 </h3>
-                                                <div className="flex items-center mb-2">
+                                                </div>
+                                                <div>
+                                                <div className="flex items-center justify-center mb-2">
                                                     {[...Array(5)].map((_, i) => (
                                                         <svg
                                                             key={i}
@@ -215,7 +212,7 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) {
                                                     <span className="ml-2 text-sm text-gray-400">({producto.rating || 4.5})</span>
                                                 </div>
                                                 <div className="flex items-center justify-center space-x-2">
-                                                    <span className="text-2xl font-bold text-[#ffcc00]">{formatCOPCustom(producto.precio)}</span>
+                                                    <span className="text-base sm:text-lg lg:text-lg xl:text-xl font-bold text-[#ffcc00]">{formatCOPCustom(producto.precio)}</span>
                                                     {producto.precioOriginal && producto.precioOriginal > producto.precio && (
                                                         <span className="text-sm text-gray-500 line-through">{formatCOPCustom(producto.precioOriginal)}</span>
                                                     )}
@@ -226,12 +223,13 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) {
                                                 >
                                                     Ver Detalles
                                                 </button>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
 
-                                {filteredProducts.length > visibleProductsCount && (
+                                {totalPages > 1 && (
                                     <>
                                         <button
                                             onClick={goToPrev}
@@ -246,6 +244,54 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) {
                                             &#10095;
                                         </button>
                                     </>
+                                )}
+
+                                {/* Paginador numérico */}
+                                {totalPages > 1 && (
+                                    <div className="flex justify-center items-center space-x-2 mt-8">
+                                        <button
+                                            onClick={goToPrev}
+                                            className="px-3 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-colors"
+                                        >
+                                            Anterior
+                                        </button>
+                                        
+                                        <div className="flex space-x-1">
+                                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                                let pageNum;
+                                                if (totalPages <= 5) {
+                                                    pageNum = i + 1;
+                                                } else if (currentPage <= 3) {
+                                                    pageNum = i + 1;
+                                                } else if (currentPage >= totalPages - 2) {
+                                                    pageNum = totalPages - 4 + i;
+                                                } else {
+                                                    pageNum = currentPage - 2 + i;
+                                                }
+                                                
+                                                return (
+                                                    <button
+                                                        key={pageNum}
+                                                        onClick={() => goToPage(pageNum)}
+                                                        className={`px-3 py-2 rounded-md transition-colors ${
+                                                            currentPage === pageNum
+                                                                ? 'bg-[#6b5b47] text-white'
+                                                                : 'bg-gray-700 text-white hover:bg-gray-600'
+                                                        }`}
+                                                    >
+                                                        {pageNum}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        
+                                        <button
+                                            onClick={goToNext}
+                                            className="px-3 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-colors"
+                                        >
+                                            Siguiente
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         </>

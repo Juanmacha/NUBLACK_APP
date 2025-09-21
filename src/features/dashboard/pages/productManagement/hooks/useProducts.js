@@ -61,6 +61,8 @@ export const loadProducts = () => {
 const saveProducts = (products) => {
   try {
     localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(products));
+    // Disparar evento personalizado para notificar cambios
+    window.dispatchEvent(new CustomEvent('productsUpdated'));
   } catch (error) {
     console.error('Error saving products:', error);
   }
@@ -89,6 +91,26 @@ export const useProducts = () => {
     };
 
     loadData();
+
+    // Listener para detectar cambios en localStorage desde otras pestañas/componentes
+    const handleStorageChange = (e) => {
+      if (e.key === PRODUCTS_STORAGE_KEY) {
+        loadData();
+      }
+    };
+
+    // Listener para cambios en la misma pestaña
+    const handleCustomStorageChange = () => {
+      loadData();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('productsUpdated', handleCustomStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('productsUpdated', handleCustomStorageChange);
+    };
   }, []);
 
   const createProduct = useCallback(async (productData) => {

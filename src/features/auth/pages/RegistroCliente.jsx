@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthClient } from "../hooks/useAuthClient.jsx";
-import { Eye, EyeSlash } from "react-bootstrap-icons";
+import { Eye, EyeSlash, ArrowLeft } from "react-bootstrap-icons";
 
 const RegistroCliente = () => {
   const [formData, setFormData] = useState({
@@ -109,6 +109,16 @@ const RegistroCliente = () => {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4">
+      {/* Botón Atrás */}
+      <button
+        onClick={() => navigate("/")}
+        className="fixed top-4 left-4 z-50 flex items-center gap-2 bg-[#111111] hover:bg-[#1a1a1a] text-white px-4 py-2 rounded-lg border border-[#333] transition-all duration-200 shadow-lg"
+        aria-label="Volver a la página principal"
+      >
+        <ArrowLeft size={20} />
+        <span className="hidden sm:inline">Atrás</span>
+      </button>
+      
       <div className="max-w-4xl w-full">
         {/* Logo y título */}
         <div className="text-center mb-8">

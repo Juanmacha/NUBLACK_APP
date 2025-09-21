@@ -134,10 +134,19 @@ const UserForm = ({ user, onSave, onClose, mode, isProfileEdit = false, users })
   const Required = () => <span className="text-red-500">*</span>;
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <form onSubmit={handleSubmit} className="p-6 space-y-6">
+      {/* Información Personal */}
+      <div className="space-y-4">
+        <div className="border-b border-gray-200 pb-2">
+          <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            Información Personal
+          </h3>
+        </div>
+        
        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-1">
-          <label htmlFor="firstName" className="text-sm font-medium text-gray-700">
+          <div className="space-y-2">
+            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
             Primer Nombre <Required />
           </label>
           <input
@@ -146,12 +155,14 @@ const UserForm = ({ user, onSave, onClose, mode, isProfileEdit = false, users })
             value={formData.firstName}
             onChange={handleChange}
             disabled={isViewMode}
-            className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Ingresa el primer nombre"
+              className="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
-          {errors.firstName && <p className="text-xs text-red-500">{errors.firstName}</p>}
+            {errors.firstName && <p className="text-xs text-red-500 mt-1">{errors.firstName}</p>}
         </div>
-        <div className="space-y-1">
-          <label htmlFor="lastName" className="text-sm font-medium text-gray-700">
+          
+          <div className="space-y-2">
+            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
             Primer Apellido <Required />
           </label>
           <input
@@ -160,15 +171,26 @@ const UserForm = ({ user, onSave, onClose, mode, isProfileEdit = false, users })
             value={formData.lastName}
             onChange={handleChange}
             disabled={isViewMode}
-            className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Ingresa el primer apellido"
+              className="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
-          {errors.lastName && <p className="text-xs text-red-500">{errors.lastName}</p>}
+            {errors.lastName && <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>}
+          </div>
         </div>
       </div>
 
+      {/* Documento de Identidad */}
+      <div className="space-y-4">
+        <div className="border-b border-gray-200 pb-2">
+          <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            Documento de Identidad
+          </h3>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-1">
-          <label htmlFor="documentType" className="text-sm font-medium text-gray-700">
+          <div className="space-y-2">
+            <label htmlFor="documentType" className="block text-sm font-medium text-gray-700">
             Tipo de Documento <Required />
           </label>
           <select
@@ -177,18 +199,19 @@ const UserForm = ({ user, onSave, onClose, mode, isProfileEdit = false, users })
             value={formData.documentType}
             onChange={handleChange}
             disabled={isViewMode}
-            className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           >
-            <option value="">Seleccionar...</option>
+              <option value="">Selecciona un tipo</option>
             <option value="CC">Cédula de Ciudadanía</option>
             <option value="CE">Cédula de Extranjería</option>
             <option value="TI">Tarjeta de Identidad</option>
             <option value="PP">Pasaporte</option>
           </select>
-          {errors.documentType && <p className="text-xs text-red-500">{errors.documentType}</p>}
+            {errors.documentType && <p className="text-xs text-red-500 mt-1">{errors.documentType}</p>}
         </div>
-        <div className="space-y-1">
-          <label htmlFor="documentNumber" className="text-sm font-medium text-gray-700">
+          
+          <div className="space-y-2">
+            <label htmlFor="documentNumber" className="block text-sm font-medium text-gray-700">
             Número de Documento <Required />
           </label>
           <input
@@ -199,14 +222,26 @@ const UserForm = ({ user, onSave, onClose, mode, isProfileEdit = false, users })
             value={formData.documentNumber}
             onChange={handleChange}
             disabled={isViewMode}
-            className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="12345678"
+              className="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
-          {errors.documentNumber && <p className="text-xs text-red-500">{errors.documentNumber}</p>}
+            {errors.documentNumber && <p className="text-xs text-red-500 mt-1">{errors.documentNumber}</p>}
+          </div>
         </div>
       </div>
 
-      <div className="space-y-1">
-        <label htmlFor="phone" className="text-sm font-medium text-gray-700">
+      {/* Información de Contacto */}
+      <div className="space-y-4">
+        <div className="border-b border-gray-200 pb-2">
+          <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+            Información de Contacto
+          </h3>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
           Teléfono <Required />
         </label>
         <input
@@ -217,13 +252,14 @@ const UserForm = ({ user, onSave, onClose, mode, isProfileEdit = false, users })
           value={formData.phone}
           onChange={handleChange}
           disabled={isViewMode}
-          className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="3001234567"
+              className="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
         />
-        {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
+            {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
       </div>
 
-      <div className="space-y-1">
-        <label htmlFor="email" className="text-sm font-medium text-gray-700">
+          <div className="space-y-2">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
           Correo Electrónico <Required />
         </label>
         <input
@@ -233,15 +269,28 @@ const UserForm = ({ user, onSave, onClose, mode, isProfileEdit = false, users })
           value={formData.email}
           onChange={handleChange}
           disabled={isViewMode}
-          className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="correo@ejemplo.com"
+              className="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
         />
-        {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
+            {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+          </div>
+        </div>
       </div>
 
       {!isProfileEdit && (
         <>
-          <div className="space-y-1">
-            <label htmlFor="password" className="text-sm font-medium text-gray-700">
+          {/* Seguridad y Acceso */}
+          <div className="space-y-4">
+            <div className="border-b border-gray-200 pb-2">
+              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                Seguridad y Acceso
+              </h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               {mode === 'edit' ? 'Nueva Contraseña (opcional)' : <>Contraseña <Required /></>}
             </label>
             <div className="relative">
@@ -251,26 +300,31 @@ const UserForm = ({ user, onSave, onClose, mode, isProfileEdit = false, users })
                 type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={handleChange}
-                placeholder={mode === 'edit' ? 'Dejar vacío para no cambiar' : ''}
+                    placeholder={mode === 'edit' ? 'Dejar vacío para no cambiar' : 'Ingresa una contraseña segura'}
                 disabled={isViewMode}
-                className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                    className="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all pr-12"
               />
               {!isViewMode && (
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600"
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600 hover:text-gray-800 transition-colors"
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
               )}
             </div>
-            {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
+                {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
+                {mode === 'create' && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Mínimo 7 caracteres, una mayúscula y un caracter especial
+                  </p>
+                )}
           </div>
 
           {(mode === 'create' || formData.password) && (
-            <div className="space-y-1">
-              <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+                <div className="space-y-2">
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                 Confirmar Contraseña <Required />
               </label>
               <div className="relative">
@@ -281,28 +335,37 @@ const UserForm = ({ user, onSave, onClose, mode, isProfileEdit = false, users })
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={isViewMode}
-                  className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                      placeholder="Confirma tu contraseña"
+                      className="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all pr-12"
                 />
                 {!isViewMode && (
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600"
+                        className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600 hover:text-gray-800 transition-colors"
                   >
                     {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
                 )}
               </div>
-              {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword}</p>}
+                  {errors.confirmPassword && <p className="text-xs text-red-500 mt-1">{errors.confirmPassword}</p>}
             </div>
           )}
-        </>
-      )}
+            </div>
+          </div>
 
-      {!isProfileEdit && (
-        <div className="space-y-1">
-          <label htmlFor="role" className="text-sm font-medium text-gray-700">
-            Rol <Required />
+          {/* Rol del Usuario */}
+          <div className="space-y-4">
+            <div className="border-b border-gray-200 pb-2">
+              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                Permisos del Usuario
+              </h3>
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+                Rol del Usuario <Required />
           </label>
           <select
             id="role"
@@ -310,27 +373,32 @@ const UserForm = ({ user, onSave, onClose, mode, isProfileEdit = false, users })
             value={formData.role}
             onChange={handleChange}
             disabled={isViewMode}
-            className="w-full bg-gray-100 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           >
             <option value="Cliente">Cliente</option>
             <option value="Administrador">Administrador</option>
           </select>
-          {errors.role && <p className="text-xs text-red-500">{errors.role}</p>}
+              {errors.role && <p className="text-xs text-red-500 mt-1">{errors.role}</p>}
+              <p className="text-xs text-gray-500 mt-1">
+                Los administradores tienen acceso completo al sistema, los clientes solo pueden ver y gestionar sus propios datos.
+              </p>
+            </div>
         </div>
+        </>
       )}
 
-      <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+      <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
         <button
           type="button"
           onClick={onClose}
-          className="px-4 py-2 rounded-md text-sm font-medium bg-gray-200 text-gray-800 hover:bg-gray-300"
+          className="px-6 py-3 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors duration-200 border border-gray-300"
         >
           {isViewMode ? "Cerrar" : "Cancelar"}
         </button>
         {!isViewMode && (
           <button
             type="submit"
-            className="px-4 py-2 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+            className="px-6 py-3 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200 shadow-sm hover:shadow-md"
           >
             {mode === "create" ? "Crear Usuario" : "Guardar Cambios"}
           </button>

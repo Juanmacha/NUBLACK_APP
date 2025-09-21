@@ -11,11 +11,14 @@ function SobreNosotros() {
                 </div>
                 <div className="md:w-1/2 flex items-center justify-center">
                     <img
-                        src="/placeholder.svg?height=500&width=500"
-                        width="500"
-                        height="400"
-                        alt="Modelo de moda"
-                        className="aspect-square overflow-hidden rounded-xl object-cover border-2 border-dorado-oscuro hover-glow-dorado w-full h-auto max-w-sm md:max-w-full"
+                        src="/images/3.jpg"
+                        width="300"
+                        height="250"
+                        alt="Nuestra Filosofía - Moda urbana NUBLACK"
+                        className="overflow-hidden rounded-xl object-cover border-2 border-dorado-oscuro hover-glow-dorado w-64 h-48 md:w-80 md:h-60 hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                            e.target.src = "/images/Jordan.png";
+                        }}
                     />
                 </div>
             </div>

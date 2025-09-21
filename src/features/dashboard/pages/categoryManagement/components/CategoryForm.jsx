@@ -1,11 +1,19 @@
 
 import React, { useState, useEffect } from "react";
 import { useCategories } from "../hooks/useCategories";
+import ImageUpload from "../../../../../shared/components/ImageUpload";
+import { useToastContext } from "../../../../../shared/context/ToastContext";
+import Badge from "../../../../../shared/components/Badge";
+import Tooltip from "../../../../../shared/components/Tooltip";
 
 const CategoryForm = ({ category, onSave, onClose, mode }) => {
   const { categories } = useCategories();
+  const { success, error: showError } = useToastContext();
   const [form, setForm] = useState({
     nombre: "",
+    descripcion: "",
+    estado: "Activo",
+    imagen: null,
   });
   const [errors, setErrors] = useState({});
 
@@ -16,6 +24,7 @@ const CategoryForm = ({ category, onSave, onClose, mode }) => {
         nombre: category.nombre || "",
         descripcion: category.descripcion || "",
         estado: category.estado || "Activo",
+        imagen: category.imagen || null,
       });
     }
   }, [category]);
@@ -114,6 +123,75 @@ const CategoryForm = ({ category, onSave, onClose, mode }) => {
           <option>Activo</option>
           <option>Inactivo</option>
         </select>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-gray-700">
+            Imagen de la Categoría
+            <Tooltip content="Sube una imagen representativa para la categoría. Formatos: JPG, PNG, WebP. Máximo 5MB.">
+              <span className="ml-1 text-gray-400 cursor-help">ℹ️</span>
+            </Tooltip>
+          </label>
+          {form.imagen && (
+            <Badge variant="success" size="sm">
+              Imagen cargada
+            </Badge>
+          )}
+        </div>
+
+        {isViewMode ? (
+          form.imagen ? (
+            <div className="relative group hover-lift">
+              <img
+                src={form.imagen}
+                alt={form.nombre}
+                className="w-full h-48 object-cover rounded-lg border border-gray-300 shadow-sm"
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                <Tooltip content="Ver imagen completa">
+                  <button
+                    type="button"
+                    onClick={() => window.open(form.imagen, '_blank')}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-3 bg-white rounded-full shadow-lg hover:bg-gray-100"
+                  >
+                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </button>
+                </Tooltip>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-12 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
+              <svg className="h-12 w-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p>No hay imagen disponible</p>
+            </div>
+          )
+        ) : (
+          <ImageUpload
+            onImageSelect={(file, imageUrl) => {
+              setForm(prev => ({
+                ...prev,
+                imagen: imageUrl
+              }));
+              success('Imagen cargada', 'La imagen de la categoría se ha subido correctamente.');
+            }}
+            onImageRemove={() => {
+              setForm(prev => ({
+                ...prev,
+                imagen: null
+              }));
+            }}
+            existingImage={form.imagen}
+            maxSize={5 * 1024 * 1024} // 5MB
+            aspectRatio="landscape"
+            className="w-full"
+          />
+        )}
       </div>
       <div className="mt-6 flex justify-end gap-3">
         <button

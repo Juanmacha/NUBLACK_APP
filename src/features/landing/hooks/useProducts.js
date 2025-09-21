@@ -43,6 +43,26 @@ export const useProducts = () => {
     };
 
     loadData();
+
+    // Listener para detectar cambios en localStorage desde otras pestañas/componentes
+    const handleStorageChange = (e) => {
+      if (e.key === PRODUCTS_STORAGE_KEY) {
+        loadData();
+      }
+    };
+
+    // Listener para cambios en la misma pestaña
+    const handleCustomStorageChange = () => {
+      loadData();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('productsUpdated', handleCustomStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('productsUpdated', handleCustomStorageChange);
+    };
   }, []);
 
   const createProduct = useCallback(async (productData) => {
