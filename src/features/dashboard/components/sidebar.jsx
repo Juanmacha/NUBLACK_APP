@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { PersonCircle, GearFill, BoxArrowRight, HouseDoor, People, Folder, Basket3, Clipboard, Search } from "react-bootstrap-icons";
+import { PersonCircle, BoxArrowRight, HouseDoor, People, Folder, Basket3, Clipboard, Search } from "react-bootstrap-icons";
 import { useAuthClient } from '../../auth/hooks/useAuthClient';
 import Swal from 'sweetalert2';
 
@@ -78,19 +78,6 @@ function Sidebar() {
                     </div>
                 </div>
 
-                {/* Configuración */}
-                <button
-                    className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium
-                        text-[#cfcfcf] hover:bg-[#1a1a1a] hover:text-white 
-                        transition-colors duration-200 ease-in-out w-full text-left"
-                    onClick={() => {
-                        console.log("Configuración clickeada");
-                        alert("Abriendo configuración...");
-                    }}
-                >
-                    <GearFill className="h-5 w-5" />
-                    Configuración
-                </button>
 
                 {/* Cerrar Sesión */}
                 <button

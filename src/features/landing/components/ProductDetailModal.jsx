@@ -12,7 +12,11 @@ const ProductDetailModal = ({ product, onClose }) => {
   useEffect(() => {
     setQuantity(1); // Reset quantity when modal opens
     if (product && product.tallas && product.tallas.length > 0) {
-      setSelectedSize(product.tallas[0].talla); // Select the 'talla' property of the first object
+      // Buscar la primera talla que tenga stock disponible
+      const availableSize = product.tallas.find(sizeObj => 
+        product.stockPorTalla && product.stockPorTalla[sizeObj.talla] > 0
+      );
+      setSelectedSize(availableSize ? availableSize.talla : '');
     } else {
       setSelectedSize('');
     }

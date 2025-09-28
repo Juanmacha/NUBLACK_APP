@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthClient } from "../hooks/useAuthClient.jsx";
 import { Eye, EyeSlash, ArrowLeft } from "react-bootstrap-icons";
+import Swal from "sweetalert2";
 
 const RegistroCliente = () => {
   const [formData, setFormData] = useState({
@@ -99,6 +100,21 @@ const RegistroCliente = () => {
 
     try {
       await register(formData);
+      
+      // Mostrar alerta de éxito
+      await Swal.fire({
+        title: '¡Cuenta Creada Exitosamente!',
+        text: 'Tu cuenta de cliente ha sido creada correctamente. Ya puedes iniciar sesión.',
+        icon: 'success',
+        confirmButtonText: 'Iniciar Sesión',
+        confirmButtonColor: '#dc2626',
+        background: '#1a1a1a',
+        color: '#e5e5e5',
+        customClass: {
+          confirmButton: 'bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors'
+        }
+      });
+      
       navigate("/login");
     } catch (err) {
       setErrors({ form: err.message });
@@ -176,7 +192,7 @@ const RegistroCliente = () => {
                   value={formData.documentNumber}
                   onChange={handleChange}
                   onKeyDown={handleNumberInputKeyDown}
-                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   placeholder="12345678"
                 />
                 {errors.documentNumber && <p className="text-red-500 text-xs mt-1">{errors.documentNumber}</p>}
@@ -237,7 +253,7 @@ const RegistroCliente = () => {
                   value={formData.phone}
                   onChange={handleChange}
                   onKeyDown={handleNumberInputKeyDown}
-                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#444] rounded-lg text-[#e5e5e5] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ffffff] focus:border-transparent transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   placeholder="3001234567"
                 />
                 {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}

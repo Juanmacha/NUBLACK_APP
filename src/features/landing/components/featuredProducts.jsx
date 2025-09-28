@@ -15,7 +15,8 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) {
     const [selectedGender, setSelectedGender] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [isMobile, setIsMobile] = useState(false);
+    const [visibleProductsCount, setVisibleProductsCount] = useState(0);
+    const [isUserInteracting, setIsUserInteracting] = useState(false);
 
     // Agrupar categorías por género
     const categoryGroups = {
@@ -36,14 +37,20 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) {
         return searchTermMatch && genderMatch && categoryMatch;
     });
 
-    // Configuración responsive
-    const visibleProductsCount = isMobile ? 2 : 12; // 4 columnas x 3 filas = 12 productos en escritorio
     const totalPages = Math.ceil(filteredProducts.length / visibleProductsCount);
 
     // Efecto para manejar el cambio de tamaño de pantalla
     useEffect(() => {
         const handleResize = () => {
-            setIsMobile(window.innerWidth < 768);
+            if (window.innerWidth < 900) { // Mobile
+                setVisibleProductsCount(2);
+            } else if (window.innerWidth < 1024) { // Tablet (lg)
+                setVisibleProductsCount(2);
+            } else if (window.innerWidth < 1280) { // Desktop pequeño (xl)
+                setVisibleProductsCount(3);
+            } else { // Desktop grande (2xl)
+                setVisibleProductsCount(12);
+            }
         };
         
         handleResize();
@@ -57,27 +64,47 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) {
         setCurrentPage(1);
     }, [selectedGender, selectedCategory, searchTerm]);
 
+    // Carrusel automático (solo si el usuario no está interactuando)
+    useEffect(() => {
+        if (filteredProducts.length > visibleProductsCount && !isUserInteracting) {
+            const interval = setInterval(() => {
+                setCurrentPage(prev => prev >= totalPages ? 1 : prev + 1);
+            }, 4000); // Cambia de página cada 4 segundos
+
+            return () => clearInterval(interval);
+        }
+    }, [currentPage, filteredProducts.length, visibleProductsCount, totalPages, isUserInteracting]);
+
     // Calcular productos visibles
     const startIdx = (currentPage - 1) * visibleProductsCount;
     const endIdx = startIdx + visibleProductsCount;
     const currentProducts = filteredProducts.slice(startIdx, endIdx);
 
     const goToPrev = () => {
+        setIsUserInteracting(true);
         setCurrentPage(prev => prev > 1 ? prev - 1 : totalPages);
+        // Reanudar carrusel automático después de 10 segundos
+        setTimeout(() => setIsUserInteracting(false), 10000);
     };
 
     const goToNext = () => {
+        setIsUserInteracting(true);
         setCurrentPage(prev => prev < totalPages ? prev + 1 : 1);
+        // Reanudar carrusel automático después de 10 segundos
+        setTimeout(() => setIsUserInteracting(false), 10000);
     };
 
     const goToPage = (page) => {
+        setIsUserInteracting(true);
         setCurrentPage(page);
+        // Reanudar carrusel automático después de 10 segundos
+        setTimeout(() => setIsUserInteracting(false), 10000);
     };
 
     if (loading) {
         return (
-            <section id="productos" className="w-full p-12 md:py-24 lg:py-32 bg-[#0a0a0a]">
-                <div className="container px-4 md:px-6">
+            <section id="productos" className="w-full py-12 md:py-24 lg:py-32 bg-[#0a0a0a]">
+                <div className="container mx-auto px-0 md:px-0">
                     <div className="text-center">
                         <div className="text-[#6b5b47] text-2xl">Cargando productos...</div>
                     </div>
@@ -88,8 +115,8 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) {
 
     return (
         <>
-            <section id="productos" className="w-full p-12 md:py-24 lg:py-32 bg-[#0a0a0a]">
-                <div className="container px-4 md:px-6">
+            <section id="productos" className="w-full py-12 md:py-24 lg:py-32 bg-[#0a0a0a]">
+                <div className="container mx-auto px-0 md:px-0">
                     <div className="flex flex-col items-center justify-center space-y-4 text-center">
                         <div className="space-y-2">
                             <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl text-[#6b5b47]">
@@ -171,16 +198,16 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) {
                         </div>
                     ) : (
                         <>
-                            <div className="max-w-7xl mx-auto relative">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-12 px-4 sm:px-6">
+                            <div className="w-full relative px-1">
+                                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1 sm:gap-1.5 md:gap-2 mt-12">
                                     {currentProducts.map((producto) => (
                                         <div
                                             key={producto.id}
-                                            className="bg-[#111111] text-[#f5f5f5] rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all cursor-pointer min-h-[300px] sm:min-h-[280px] lg:min-h-[320px] flex flex-col"
+                                            className="bg-[#111111] text-[#f5f5f5] rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all cursor-pointer min-h-[280px] sm:min-h-[320px] md:min-h-[360px] lg:min-h-[320px] xl:min-h-[350px] flex flex-col"
                                             onClick={() => onProductClick(producto)}
                                         >
                                             <div className="relative">
-                                                <div className="w-full h-32 sm:h-40 lg:h-44 xl:h-48 bg-gray-200 rounded-lg flex items-center justify-center hover:scale-105 transition-transform overflow-hidden">
+                                                <div className="w-full h-32 sm:h-36 md:h-40 lg:h-40 xl:h-44 bg-gray-200 rounded-lg flex items-center justify-center hover:scale-105 transition-transform overflow-hidden">
                                                     <img
                                                         src={producto.imagen || "/placeholder.svg"}
                                                         alt={producto.nombre}
@@ -188,38 +215,38 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) {
                                                     />
                                                 </div>
                                             </div>
-                                            <div className="p-3 sm:p-3 lg:p-3 xl:p-4 flex-1 flex flex-col justify-between">
+                                            <div className="p-3 sm:p-4 md:p-4 lg:p-3 xl:p-4 flex-1 flex flex-col justify-between">
                                                 <div>
-                                                <span className="inline-block text-xs px-2 py-1 rounded bg-[#222] text-gray-300 mb-2">
+                                                <span className="inline-block text-sm sm:text-base px-2 py-1 rounded bg-[#222] text-gray-300 mb-2 sm:mb-3">
                                                     {producto.categoria || 'Sin categoría'}
                                                 </span>
-                                                <h3 className="text-sm sm:text-sm lg:text-sm xl:text-base font-semibold mb-2 text-center">
+                                                <h3 className="text-base sm:text-lg lg:text-base xl:text-lg font-semibold mb-2 sm:mb-3 text-center">
                                                     {producto.nombre}
                                                 </h3>
                                                 </div>
                                                 <div>
-                                                <div className="flex items-center justify-center mb-2">
+                                                <div className="flex items-center justify-center mb-2 sm:mb-3">
                                                     {[...Array(5)].map((_, i) => (
                                                         <svg
                                                             key={i}
-                                                            className={`w-4 h-4 ${i < Math.floor(producto.rating || 4.5) ? "text-yellow-400 fill-yellow-400" : "text-gray-600"}`}
+                                                            className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-4 lg:h-4 xl:w-5 xl:h-5 ${i < Math.floor(producto.rating || 4.5) ? "text-yellow-400 fill-yellow-400" : "text-gray-600"}`}
                                                             fill="currentColor"
                                                             viewBox="0 0 20 20"
                                                         >
                                                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.262 3.89a1 1 0 00.95.69h4.084c.969 0 1.371 1.24.588 1.81l-3.302 2.397a1 1 0 00-.364 1.118l1.262 3.89c.3.921-.755 1.688-1.54 1.118l-3.302-2.397a1 1 0 00-1.175 0l-3.302-2.397c-.784.57-1.838-.197-1.539-1.118l1.262-3.89a1 1 0 00-.364-1.118L2.17 9.317c-.783-.57-.38-1.81.588-1.81h4.084a1 1 0 00.95-.69l1.262-3.89z" />
                                                         </svg>
                                                     ))}
-                                                    <span className="ml-2 text-sm text-gray-400">({producto.rating || 4.5})</span>
+                                                    <span className="ml-3 text-base sm:text-lg text-gray-400">({producto.rating || 4.5})</span>
                                                 </div>
-                                                <div className="flex items-center justify-center space-x-2">
-                                                    <span className="text-base sm:text-lg lg:text-lg xl:text-xl font-bold text-[#ffcc00]">{formatCOPCustom(producto.precio)}</span>
+                                                <div className="flex items-center justify-center space-x-3">
+                                                    <span className="text-lg sm:text-xl lg:text-lg xl:text-xl font-bold text-[#ffcc00]">{formatCOPCustom(producto.precio)}</span>
                                                     {producto.precioOriginal && producto.precioOriginal > producto.precio && (
-                                                        <span className="text-sm text-gray-500 line-through">{formatCOPCustom(producto.precioOriginal)}</span>
+                                                        <span className="text-base sm:text-lg text-gray-500 line-through">{formatCOPCustom(producto.precioOriginal)}</span>
                                                     )}
                                                 </div>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); onProductClick(producto); }}
-                                                    className="w-full mt-6 bg-[#4B1E1E] hover:bg-[#6a2b2b] text-white font-semibold py-2 rounded-lg"
+                                                    className="w-full mt-3 sm:mt-4 md:mt-5 bg-[#4B1E1E] hover:bg-[#6a2b2b] text-white font-semibold py-2 sm:py-3 rounded-lg text-base sm:text-lg"
                                                 >
                                                     Ver Detalles
                                                 </button>
@@ -229,19 +256,24 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) {
                                     ))}
                                 </div>
 
-                                {totalPages > 1 && (
+                                {/* Botones de navegación del carrusel */}
+                                {filteredProducts.length > visibleProductsCount && (
                                     <>
                                         <button
                                             onClick={goToPrev}
-                                            className="absolute left-0 top-1/2 -translate-y-1/2 bg-gray-800 bg-opacity-50 text-white p-2 rounded-full ml-2 hover:bg-opacity-75"
+                                            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-gray-800 bg-opacity-50 text-white p-2 sm:p-3 rounded-full hover:bg-opacity-75 transition-all z-10"
                                         >
-                                            &#10094;
+                                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                            </svg>
                                         </button>
                                         <button
                                             onClick={goToNext}
-                                            className="absolute right-0 top-1/2 -translate-y-1/2 bg-gray-800 bg-opacity-50 text-white p-2 rounded-full mr-2 hover:bg-opacity-75"
+                                            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-gray-800 bg-opacity-50 text-white p-2 sm:p-3 rounded-full hover:bg-opacity-75 transition-all z-10"
                                         >
-                                            &#10095;
+                                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                            </svg>
                                         </button>
                                     </>
                                 )}
@@ -249,13 +281,6 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) {
                                 {/* Paginador numérico */}
                                 {totalPages > 1 && (
                                     <div className="flex justify-center items-center space-x-2 mt-8">
-                                        <button
-                                            onClick={goToPrev}
-                                            className="px-3 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-colors"
-                                        >
-                                            Anterior
-                                        </button>
-                                        
                                         <div className="flex space-x-1">
                                             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                                                 let pageNum;
@@ -284,13 +309,6 @@ function FeaturedProducts({ searchTerm = "", onProductClick }) {
                                                 );
                                             })}
                                         </div>
-                                        
-                                        <button
-                                            onClick={goToNext}
-                                            className="px-3 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-colors"
-                                        >
-                                            Siguiente
-                                        </button>
                                     </div>
                                 )}
                             </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { formatCOPCustom } from '../../../shared/utils/currency';
 
 const SearchResults = ({ results, searchTerm }) => {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ const SearchResults = ({ results, searchTerm }) => {
                 <p className="text-white font-semibold">{product.nombre}</p>
                 <p className="text-gray-400 text-sm">{product.categoria}</p>
               </div>
-              <p className="text-yellow-400 font-bold ml-auto">€{product.precio}</p>
+              <p className="text-yellow-400 font-bold ml-auto">{formatCOPCustom(product.precio)}</p>
             </li>
           ))}
         </ul>

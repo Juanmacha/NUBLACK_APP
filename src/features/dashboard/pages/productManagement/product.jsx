@@ -49,6 +49,51 @@ function Product() {
     setPaginaActual(1);
   }, [busqueda, filtroCategoria]);
 
+  // Listener para errores de almacenamiento
+  useEffect(() => {
+    const handleStorageError = (event) => {
+      if (event.type === 'storageQuotaExceeded') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Almacenamiento Lleno',
+          text: 'El almacenamiento local está lleno. ¿Deseas limpiar todos los datos para continuar?',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, limpiar todo',
+          cancelButtonText: 'Cancelar',
+          confirmButtonColor: '#d33',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Importar y usar la función de limpieza
+            import('./hooks/useProducts').then(({ clearAllStorage }) => {
+              clearAllStorage();
+              Swal.fire(
+                '¡Limpieza Completada!',
+                'El almacenamiento ha sido limpiado. Ahora puedes crear productos nuevamente.',
+                'success'
+              );
+            });
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error de Almacenamiento',
+          text: event.detail.message,
+          confirmButtonText: 'Entendido'
+        });
+      }
+    };
+
+    window.addEventListener('storageQuotaExceeded', handleStorageError);
+    window.addEventListener('storageError', handleStorageError);
+
+    return () => {
+      window.removeEventListener('storageQuotaExceeded', handleStorageError);
+      window.removeEventListener('storageError', handleStorageError);
+    };
+  }, []);
+
+
   const handleCrearProducto = async (nuevoProducto) => {
     try {
       await createProduct(nuevoProducto);
@@ -174,13 +219,6 @@ function Product() {
       {totalPaginas > 1 && (
         <div className="flex justify-center mt-6">
           <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-            <button
-              onClick={() => setPaginaActual(paginaActual - 1)}
-              disabled={paginaActual === 1}
-              className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-            >
-              Anterior
-            </button>
             {[...Array(totalPaginas)].map((_, i) => (
               <button
                 key={i}
@@ -194,13 +232,6 @@ function Product() {
                 {i + 1}
               </button>
             ))}
-            <button
-              onClick={() => setPaginaActual(paginaActual + 1)}
-              disabled={paginaActual === totalPaginas}
-              className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-            >
-              Siguiente
-            </button>
           </nav>
         </div>
       )}

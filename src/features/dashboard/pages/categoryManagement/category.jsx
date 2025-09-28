@@ -13,7 +13,7 @@ function Category() {
   const [paginaActual, setPaginaActual] = useState(1);
   const [elementosPorPagina] = useState(4);
 
-  const { categories, updateCategory } = useCategories();
+  const { categories, updateCategory, clearAllStorage } = useCategories();
   const { products } = useProducts();
 
   const [modalVer, setModalVer] = useState(null);
@@ -45,6 +45,58 @@ function Category() {
   useEffect(() => {
     setPaginaActual(1);
   }, [busqueda, filtroEstado]);
+
+  // Escuchar eventos de error de almacenamiento
+  useEffect(() => {
+    const handleStorageQuotaExceeded = (event) => {
+      Swal.fire({
+        title: 'Almacenamiento Lleno',
+        text: 'El almacenamiento local está lleno. ¿Deseas limpiar todos los datos para continuar?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, limpiar todo',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const success = clearAllStorage();
+          if (success) {
+            Swal.fire(
+              '¡Limpieza Completada!',
+              'Todos los datos han sido eliminados. La página se recargará.',
+              'success'
+            ).then(() => {
+              window.location.reload();
+            });
+          } else {
+            Swal.fire(
+              'Error',
+              'No se pudo limpiar el almacenamiento. Intenta recargar la página manualmente.',
+              'error'
+            );
+          }
+        }
+      });
+    };
+
+    const handleStorageError = (event) => {
+      Swal.fire({
+        title: 'Error de Almacenamiento',
+        text: event.detail.message,
+        icon: 'error',
+        confirmButtonText: 'Entendido'
+      });
+    };
+
+    window.addEventListener('storageQuotaExceeded', handleStorageQuotaExceeded);
+    window.addEventListener('storageError', handleStorageError);
+
+    return () => {
+      window.removeEventListener('storageQuotaExceeded', handleStorageQuotaExceeded);
+      window.removeEventListener('storageError', handleStorageError);
+    };
+  }, [clearAllStorage]);
 
   const handleToggleCategoryStatus = async (id, newStatus) => {
     const categoryToUpdate = categories.find(cat => cat.id === id);
@@ -82,7 +134,7 @@ function Category() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto max-h-screen p-8">
+    <div className="flex-1 p-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Categorías</h1>
@@ -170,6 +222,7 @@ function Category() {
           onClose={() => setModalEditar(null)}
           onGuardar={async (data) => {
             try {
+              console.log('Datos a actualizar:', data);
               await updateCategory(data.id, data);
               Swal.fire(
                 '¡Actualizada!',
@@ -178,11 +231,46 @@ function Category() {
               );
               setModalEditar(null);
             } catch (error) {
-              Swal.fire(
-                'Error',
-                error.message || 'Hubo un problema al actualizar la categoría.',
-                'error'
-              );
+              console.error('Error al actualizar categoría:', error);
+              
+              // Si es un error de quota excedida, mostrar SweetAlert especial
+              if (error.message === 'QUOTA_EXCEEDED') {
+                Swal.fire({
+                  title: 'Almacenamiento Lleno',
+                  text: 'El almacenamiento local está lleno. ¿Deseas limpiar todos los datos para continuar?',
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonColor: '#d33',
+                  cancelButtonColor: '#3085d6',
+                  confirmButtonText: 'Sí, limpiar todo',
+                  cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    const success = clearAllStorage();
+                    if (success) {
+                      Swal.fire(
+                        '¡Limpieza Completada!',
+                        'Todos los datos han sido eliminados. La página se recargará.',
+                        'success'
+                      ).then(() => {
+                        window.location.reload();
+                      });
+                    } else {
+                      Swal.fire(
+                        'Error',
+                        'No se pudo limpiar el almacenamiento. Intenta recargar la página manualmente.',
+                        'error'
+                      );
+                    }
+                  }
+                });
+              } else {
+                Swal.fire(
+                  'Error',
+                  `Error al actualizar la categoría: ${error.message || 'Error desconocido'}`,
+                  'error'
+                );
+              }
             }
           }}
         />

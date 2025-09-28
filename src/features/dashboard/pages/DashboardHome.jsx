@@ -80,10 +80,10 @@ function DashboardHome() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-lg shadow-md border hover-lift transition-all duration-200 hover:shadow-lg dashboard-card shine-effect">
                     <div className="flex items-center">
-                        <People className="w-8 h-8 text-blue-500 mr-3 bounce-gentle" />
+                        <People className="w-8 h-8 text-blue-500 mr-3" />
                         <div>
                             <h3 className="text-lg font-semibold text-gray-900 mb-2">Usuarios</h3>
-                            <p className="text-3xl font-bold text-blue-600 fade-in number-pulse">{stats.usuarios}</p>
+                            <p className="text-3xl font-bold text-blue-600">{stats.usuarios}</p>
                             <p className="text-sm text-gray-500">Total de usuarios registrados</p>
                         </div>
                     </div>
@@ -91,10 +91,10 @@ function DashboardHome() {
                 
                 <div className="bg-white p-6 rounded-lg shadow-md border hover-lift transition-all duration-200 hover:shadow-lg dashboard-card shine-effect">
                     <div className="flex items-center">
-                        <Basket3 className="w-8 h-8 text-green-500 mr-3 bounce-gentle" />
+                        <Basket3 className="w-8 h-8 text-green-500 mr-3" />
                         <div>
                             <h3 className="text-lg font-semibold text-gray-900 mb-2">Productos</h3>
-                            <p className="text-3xl font-bold text-green-600 fade-in number-pulse">{stats.productos}</p>
+                            <p className="text-3xl font-bold text-green-600">{stats.productos}</p>
                             <p className="text-sm text-gray-500">Productos en catálogo</p>
                         </div>
                     </div>
@@ -102,10 +102,10 @@ function DashboardHome() {
                 
                 <div className="bg-white p-6 rounded-lg shadow-md border hover-lift transition-all duration-200 hover:shadow-lg dashboard-card shine-effect">
                     <div className="flex items-center">
-                        <Folder className="w-8 h-8 text-purple-500 mr-3 bounce-gentle" />
+                        <Folder className="w-8 h-8 text-purple-500 mr-3" />
                         <div>
                             <h3 className="text-lg font-semibold text-gray-900 mb-2">Categorías</h3>
-                            <p className="text-3xl font-bold text-purple-600 fade-in number-pulse">{stats.categorias}</p>
+                            <p className="text-3xl font-bold text-purple-600">{stats.categorias}</p>
                             <p className="text-sm text-gray-500">Categorías disponibles</p>
                         </div>
                     </div>
@@ -113,10 +113,10 @@ function DashboardHome() {
                 
                 <div className="bg-white p-6 rounded-lg shadow-md border hover-lift transition-all duration-200 hover:shadow-lg dashboard-card shine-effect">
                     <div className="flex items-center">
-                        <Clipboard className="w-8 h-8 text-orange-500 mr-3 bounce-gentle" />
+                        <Clipboard className="w-8 h-8 text-orange-500 mr-3" />
                         <div>
                             <h3 className="text-lg font-semibold text-gray-900 mb-2">Solicitudes</h3>
-                            <p className="text-3xl font-bold text-orange-600 fade-in number-pulse">{stats.solicitudes}</p>
+                            <p className="text-3xl font-bold text-orange-600">{stats.solicitudes}</p>
                             <p className="text-sm text-gray-500">Total de solicitudes</p>
                         </div>
                     </div>
@@ -127,10 +127,10 @@ function DashboardHome() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-lg shadow-md border border-yellow-200 hover-lift transition-all duration-200 hover:shadow-lg dashboard-card shine-effect">
                     <div className="flex items-center">
-                        <Clipboard className="w-8 h-8 text-yellow-500 mr-3 bounce-gentle" />
+                        <Clipboard className="w-8 h-8 text-yellow-500 mr-3" />
                         <div>
                             <h3 className="text-lg font-semibold text-gray-900 mb-2">Pendientes</h3>
-                            <p className="text-3xl font-bold text-yellow-600 fade-in number-pulse">{stats.solicitudesPendientes}</p>
+                            <p className="text-3xl font-bold text-yellow-600">{stats.solicitudesPendientes}</p>
                             <p className="text-sm text-gray-500">Solicitudes por revisar</p>
                         </div>
                     </div>
@@ -138,10 +138,10 @@ function DashboardHome() {
                 
                 <div className="bg-white p-6 rounded-lg shadow-md border border-green-200 hover-lift transition-all duration-200 hover:shadow-lg dashboard-card shine-effect">
                     <div className="flex items-center">
-                        <Clipboard className="w-8 h-8 text-green-500 mr-3 bounce-gentle" />
+                        <Clipboard className="w-8 h-8 text-green-500 mr-3" />
                         <div>
                             <h3 className="text-lg font-semibold text-gray-900 mb-2">Aprobadas</h3>
-                            <p className="text-3xl font-bold text-green-600 fade-in number-pulse">{stats.solicitudesAprobadas}</p>
+                            <p className="text-3xl font-bold text-green-600">{stats.solicitudesAprobadas}</p>
                             <p className="text-sm text-gray-500">Solicitudes aprobadas</p>
                         </div>
                     </div>
@@ -149,10 +149,10 @@ function DashboardHome() {
                 
                 <div className="bg-white p-6 rounded-lg shadow-md border border-blue-200 hover-lift transition-all duration-200 hover:shadow-lg dashboard-card shine-effect">
                     <div className="flex items-center">
-                        <Clipboard className="w-8 h-8 text-blue-500 mr-3 bounce-gentle" />
+                        <Clipboard className="w-8 h-8 text-blue-500 mr-3" />
                         <div>
                             <h3 className="text-lg font-semibold text-gray-900 mb-2">En Camino</h3>
-                            <p className="text-3xl font-bold text-blue-600 fade-in number-pulse">{stats.solicitudesEnCamino}</p>
+                            <p className="text-3xl font-bold text-blue-600">{stats.solicitudesEnCamino}</p>
                             <p className="text-sm text-gray-500">Solicitudes en entrega</p>
                         </div>
                     </div>
@@ -160,10 +160,10 @@ function DashboardHome() {
                 
                 <div className="bg-white p-6 rounded-lg shadow-md border border-purple-200 hover-lift transition-all duration-200 hover:shadow-lg dashboard-card shine-effect">
                     <div className="flex items-center">
-                        <Clipboard className="w-8 h-8 text-purple-500 mr-3 bounce-gentle" />
+                        <Clipboard className="w-8 h-8 text-purple-500 mr-3" />
                         <div>
                             <h3 className="text-lg font-semibold text-gray-900 mb-2">Entregadas</h3>
-                            <p className="text-3xl font-bold text-purple-600 fade-in number-pulse">{stats.solicitudesEntregadas}</p>
+                            <p className="text-3xl font-bold text-purple-600">{stats.solicitudesEntregadas}</p>
                             <p className="text-sm text-gray-500">Solicitudes completadas</p>
                         </div>
                     </div>
@@ -174,10 +174,10 @@ function DashboardHome() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-lg shadow-md border border-emerald-200 hover-lift transition-all duration-200 hover:shadow-lg dashboard-card shine-effect">
                     <div className="flex items-center">
-                        <CurrencyEuro className="w-8 h-8 text-emerald-500 mr-3 bounce-gentle" />
+                        <CurrencyEuro className="w-8 h-8 text-emerald-500 mr-3" />
                         <div>
                             <h3 className="text-lg font-semibold text-gray-900 mb-2">Valor Total</h3>
-                            <p className="text-3xl font-bold text-emerald-600 fade-in number-pulse">{formatCOPCustom(stats.valorTotal)}</p>
+                            <p className="text-3xl font-bold text-emerald-600">{formatCOPCustom(stats.valorTotal)}</p>
                             <p className="text-sm text-gray-500">Valor total de todas las solicitudes</p>
                         </div>
                     </div>
@@ -185,10 +185,10 @@ function DashboardHome() {
                 
                 <div className="bg-white p-6 rounded-lg shadow-md border border-indigo-200 hover-lift transition-all duration-200 hover:shadow-lg dashboard-card shine-effect">
                     <div className="flex items-center">
-                        <GraphUp className="w-8 h-8 text-indigo-500 mr-3 bounce-gentle" />
+                        <GraphUp className="w-8 h-8 text-indigo-500 mr-3" />
                         <div>
                             <h3 className="text-lg font-semibold text-gray-900 mb-2">Detalles</h3>
-                            <p className="text-3xl font-bold text-indigo-600 fade-in number-pulse">{stats.detalles}</p>
+                            <p className="text-3xl font-bold text-indigo-600">{stats.detalles}</p>
                             <p className="text-sm text-gray-500">Total de productos solicitados</p>
                         </div>
                     </div>

@@ -5,6 +5,7 @@ import { useOrders } from "../hooks/useOrders";
 import { formatCOPCustom } from "../../../shared/utils/currency";
 import { Eye, EyeSlash } from "react-bootstrap-icons";
 import Swal from 'sweetalert2';
+import CancelacionModal from "../components/CancelacionModal";
 
 const PerfilCliente = () => {
   const { user, updateUser } = useAuthClient();
@@ -26,6 +27,8 @@ const PerfilCliente = () => {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [solicitudToCancel, setSolicitudToCancel] = useState(null);
   const navigate = useNavigate();
 
   const filtrarSolicitudesPorPeriodo = (solicitudes, periodo) => {
@@ -103,26 +106,31 @@ const PerfilCliente = () => {
     }
   }, [periodo, user, cargarSolicitudes]);
 
-  const handleCancelarSolicitud = async (solicitudId) => {
-    const result = await Swal.fire({
-      title: '¿Estás seguro?',
-      text: "¡No podrás revertir esto!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, cancelar solicitud',
-      cancelButtonText: 'No, mantener',
-    });
+  const handleCancelarSolicitud = (solicitudId) => {
+    setSolicitudToCancel(solicitudId);
+    setShowCancelModal(true);
+  };
 
-    if (result.isConfirmed) {
-      cancelarSolicitud(solicitudId, "Cancelado por el cliente"); // Puedes pasar un motivo por defecto o vacío
-      cargarSolicitudes(); 
-      Swal.fire(
-        '¡Cancelada!',
-        'La solicitud ha sido cancelada.',
-        'success'
-      );
+  const handleConfirmCancel = async (motivo) => {
+    if (solicitudToCancel) {
+      try {
+        await cancelarSolicitud(solicitudToCancel, motivo);
+        await cargarSolicitudes();
+        setShowCancelModal(false);
+        setSolicitudToCancel(null);
+        Swal.fire(
+          '¡Cancelada!',
+          'La solicitud ha sido cancelada.',
+          'success'
+        );
+      } catch (error) {
+        console.error('Error al cancelar solicitud:', error);
+        Swal.fire(
+          'Error',
+          'Hubo un problema al cancelar la solicitud. Inténtalo de nuevo.',
+          'error'
+        );
+      }
     }
   };
 
@@ -730,6 +738,16 @@ const PerfilCliente = () => {
           </button>
         </div>
       </div>
+
+      {/* Modal de Cancelación */}
+      <CancelacionModal
+        isOpen={showCancelModal}
+        onClose={() => {
+          setShowCancelModal(false);
+          setSolicitudToCancel(null);
+        }}
+        onConfirm={handleConfirmCancel}
+      />
     </div>
   );
 };

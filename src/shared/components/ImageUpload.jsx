@@ -48,22 +48,60 @@ const ImageUpload = ({
     return true;
   };
 
-  const handleFile = useCallback((file) => {
+  // Función para comprimir imágenes
+  const compressImage = (file, maxWidth = 800, quality = 0.8) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // Calcular nuevas dimensiones manteniendo la proporción
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Dibujar imagen redimensionada
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convertir a blob con compresión
+        canvas.toBlob(resolve, 'image/jpeg', quality);
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleFile = useCallback(async (file) => {
     if (!validateFile(file)) return;
 
     setUploading(true);
     
-    // Simular carga (en producción, aquí iría la lógica de subida real)
-    setTimeout(() => {
+    try {
+      // Comprimir la imagen si es muy grande
+      let processedFile = file;
+      if (file.size > 500 * 1024) { // Si es mayor a 500KB, comprimir
+        processedFile = await compressImage(file, 800, 0.7);
+      }
+      
       const reader = new FileReader();
       reader.onload = (e) => {
         const imageUrl = e.target.result;
         setPreview(imageUrl);
-        onImageSelect?.(file, imageUrl);
+        onImageSelect?.(processedFile, imageUrl);
         setUploading(false);
       };
-      reader.readAsDataURL(file);
-    }, 1000);
+      reader.readAsDataURL(processedFile);
+    } catch (error) {
+      console.error('Error processing image:', error);
+      setError('Error al procesar la imagen');
+      setUploading(false);
+    }
   }, [maxSize, acceptedTypes, onImageSelect]);
 
   const handleDrag = (e) => {

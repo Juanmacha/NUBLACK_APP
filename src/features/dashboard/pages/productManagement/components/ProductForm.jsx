@@ -439,7 +439,7 @@ const ProductForm = ({ product, onSave, onClose, mode }) => {
         ) : (
           <div className="space-y-4">
             {/* Componente de subida de imágenes - MÁS PEQUEÑO */}
-            <div className="max-w-md mx-auto">
+            <div className="max-w-xs mx-auto">
               <ImageUpload
                 onImageSelect={(file, imageUrl) => {
                   if (formData.images.length >= 5) {
