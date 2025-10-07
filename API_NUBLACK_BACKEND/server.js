@@ -1,5 +1,5 @@
 const app = require('./app');
-const { testConnection, syncDatabase, createSampleData } = require('./src/models');
+const { testConnection, syncDatabase, createSampleData } = require('./src/config/database');
 const { verifyEmailConfig } = require('./src/config/email');
 const { logger } = require('./src/config/logger');
 

@@ -3,18 +3,13 @@ const { create } = require('express-handlebars');
 const path = require('path');
 require('dotenv').config();
 
-// Configuración del transporter de Nodemailer
+// Configuración del transporter de Nodemailer para Gmail
 const createTransporter = () => {
-  return nodemailer.createTransporter({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: process.env.SMTP_SECURE === 'true',
+  return nodemailer.createTransport({
+    service: 'gmail',
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    },
-    tls: {
-      rejectUnauthorized: false
+      user: process.env.EMAIL_USER || 'nublack04@gmail.com',
+      pass: process.env.EMAIL_PASS // Necesitas usar App Password de Gmail
     }
   });
 };
@@ -47,7 +42,7 @@ const sendPasswordResetEmail = async (email, resetToken, userName) => {
     const resetUrl = `${process.env.FRONTEND_URL}/restablecer-contrasena?token=${resetToken}`;
     
     const mailOptions = {
-      from: process.env.EMAIL_FROM || 'NUblack <noreply@nublack.com>',
+      from: process.env.EMAIL_FROM || 'NUblack <nublack04@gmail.com>',
       to: email,
       subject: 'Recuperación de Contraseña - NUblack',
       html: `
@@ -113,7 +108,7 @@ const sendWelcomeEmail = async (email, userName) => {
     const transporter = createTransporter();
     
     const mailOptions = {
-      from: process.env.EMAIL_FROM || 'NUblack <noreply@nublack.com>',
+      from: process.env.EMAIL_FROM || 'NUblack <nublack04@gmail.com>',
       to: email,
       subject: '¡Bienvenido a NUblack!',
       html: `
@@ -179,7 +174,7 @@ const sendOrderConfirmationEmail = async (email, userName, orderData) => {
     const transporter = createTransporter();
     
     const mailOptions = {
-      from: process.env.EMAIL_FROM || 'NUblack <noreply@nublack.com>',
+      from: process.env.EMAIL_FROM || 'NUblack <nublack04@gmail.com>',
       to: email,
       subject: `Confirmación de Pedido #${orderData.numero_pedido} - NUblack`,
       html: `
